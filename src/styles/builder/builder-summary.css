@@ -1,0 +1,138 @@
+/* =============================================
+   BUILDER SUMMARY — Panel derecho, precios y estadísticas
+   ============================================= */
+
+.summary-title {
+  font-family: var(--font-display);
+  font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── PRICE BREAKDOWN ── */
+.price-breakdown { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.price-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.price-row-label {
+  font-size: 0.8rem; color: var(--text-secondary);
+}
+.price-row-val {
+  font-family: var(--font-mono);
+  font-size: 0.8rem; color: var(--text-primary);
+}
+
+.price-total-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+.price-total-label {
+  font-family: var(--font-display);
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.price-total-val {
+  font-family: var(--font-mono);
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── WATTAGE BAR ── */
+.watt-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.watt-label { font-size: 0.8rem; color: var(--text-secondary); }
+.watt-val { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); }
+
+.watt-bar-track {
+  height: 6px; background: var(--bg-elevated);
+  border-radius: 3px; overflow: hidden;
+}
+.watt-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: var(--success);
+  transition: width 0.4s ease, background 0.3s;
+}
+.watt-bar-fill.warn { background: var(--warning); }
+.watt-bar-fill.danger { background: var(--danger); }
+
+/* ── COMPATIBILITY WARNINGS ── */
+.compat-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.compat-alert {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem; line-height: 1.4;
+}
+.compat-alert.error   { background: rgba(255,59,92,0.08); border: 1px solid rgba(255,59,92,0.2); color: var(--danger); }
+.compat-alert.warning { background: rgba(255,179,64,0.08); border: 1px solid rgba(255,179,64,0.2); color: var(--warning); }
+.compat-alert.ok      { background: rgba(45,255,160,0.08); border: 1px solid rgba(45,255,160,0.2); color: var(--success); }
+
+/* ── PROGRESS RING ── */
+.build-progress {
+  display: flex; align-items: center; gap: 1rem;
+}
+.progress-ring-wrap {
+  position: relative; width: 64px; height: 64px; flex-shrink: 0;
+}
+.progress-ring {
+  transform: rotate(-90deg);
+}
+.progress-ring-bg { fill: none; stroke: var(--bg-elevated); stroke-width: 5; }
+.progress-ring-fill {
+  fill: none; stroke: var(--accent); stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+.progress-pct {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;
+  color: var(--accent);
+}
+.progress-info {}
+.progress-info-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.progress-info-sub {
+  font-size: 0.8rem; color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ── PRESET BUILDS ── */
+.preset-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.preset-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.875rem;
+  cursor: pointer; transition: all 0.2s;
+  text-align: left;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.preset-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+.preset-name {
+  font-family: var(--font-display);
+  font-size: 0.8rem; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-primary);
+}
+.preset-price {
+  font-family: var(--font-mono);
+  font-size: 0.8rem; color: var(--text-muted);
+}
+
+/* ── ADD TO CART BTN ── */
+.add-cart-btn {
+  width: 100%;
+  padding: 0.875rem;
+  font-size: 0.9rem; letter-spacing: 2px;
+  justify-content: center;
+}
