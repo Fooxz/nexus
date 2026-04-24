@@ -1,25 +1,11 @@
-// Responsabilidad única: capturar errores de carga 3D
-// sin romper el resto de la página
+// Desactivado en prototipo — requiere Three.js
 import { Component } from 'react'
 
 export default class SceneErrorBoundary extends Component {
-  constructor(props) {
-    super(props)
-    this.state = { hasError: false, error: null }
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error) {
-    console.warn('[SceneErrorBoundary] Error cargando modelo 3D:', error.message)
-  }
-
+  constructor(props) { super(props); this.state = { hasError: false } }
+  static getDerivedStateFromError() { return { hasError: true } }
   render() {
-    if (this.state.hasError) {
-      return this.props.fallback ?? null
-    }
+    if (this.state.hasError) return this.props.fallback ?? null
     return this.props.children
   }
 }

@@ -1,60 +1,93 @@
-// src/services/authService.js
-// Responsabilidad única: comunicación con los endpoints de autenticación.
-// USE_MOCK = true mientras el back no esté listo
-// USE_MOCK = false cuando conectes Spring Boot
+// =============================================
+// NEXUS — AUTH SERVICE
+// USE_MOCK = true  → localStorage (prototipo)
+// USE_MOCK = false → Spring Boot
+// =============================================
 
-const USE_MOCK = false  // ← ya tenemos el backend listo
+const USE_MOCK = true
 const API_BASE = 'http://localhost:8080/api'
 
-export async function register(nombre, email, password) {
+const STORAGE_KEY_TOKEN = 'nexus_token'
+const STORAGE_KEY_USER  = 'nexus_user'
+const STORAGE_KEY_USERS = 'nexus_users'
+
+// ── Helpers mock ──────────────────────────────
+function getStoredUsers() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_USERS) || '[]') }
+  catch { return [] }
+}
+
+// ── Register ──────────────────────────────────
+export async function register({ nombre, email, password }) {
   if (USE_MOCK) {
-    return { token: 'mock-token', nombre, email, rol: 'ROLE_USER' }
+    const users = getStoredUsers()
+    if (users.find(u => u.email === email)) {
+      throw new Error('El correo ya está registrado.')
+    }
+    const user = { id: `user-${Date.now()}`, nombre, email, password, rol: 'ROLE_USER' }
+    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify([...users, user]))
+    const session = { id: user.id, nombre, email, rol: user.rol }
+    localStorage.setItem(STORAGE_KEY_TOKEN, 'mock-token-' + user.id)
+    localStorage.setItem(STORAGE_KEY_USER,  JSON.stringify(session))
+    return { token: 'mock-token-' + user.id, user: session }
   }
+
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nombre, email, password })
+    body: JSON.stringify({ nombre, email, password }),
   })
-  if (!res.ok) {
-    const error = await res.text()
-    throw new Error(error || 'Error al registrarse')
-  }
-  return res.json()
+  if (!res.ok) throw new Error(await res.text() || 'Error al registrarse')
+  const data = await res.json()
+  localStorage.setItem(STORAGE_KEY_TOKEN, data.token)
+  localStorage.setItem(STORAGE_KEY_USER,  JSON.stringify(data.user))
+  return data
 }
- 
-export async function login(email, password) {
+
+// ── Login ─────────────────────────────────────
+export async function login({ email, password }) {
   if (USE_MOCK) {
-    return { token: 'mock-token', nombre: 'Eric', email, rol: 'ROLE_USER' }
+    const users = getStoredUsers()
+    const user  = users.find(u => u.email === email && u.password === password)
+    if (!user) throw new Error('Correo o contraseña incorrectos.')
+    const session = { id: user.id, nombre: user.nombre, email, rol: user.rol }
+    localStorage.setItem(STORAGE_KEY_TOKEN, 'mock-token-' + user.id)
+    localStorage.setItem(STORAGE_KEY_USER,  JSON.stringify(session))
+    return { token: 'mock-token-' + user.id, user: session }
   }
+
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   })
-  if (!res.ok) {
-    const error = await res.text()
-    throw new Error(error || 'Credenciales incorrectas')
-  }
-  return res.json()
+  if (!res.ok) throw new Error(await res.text() || 'Credenciales incorrectas')
+  const data = await res.json()
+  localStorage.setItem(STORAGE_KEY_TOKEN, data.token)
+  localStorage.setItem(STORAGE_KEY_USER,  JSON.stringify(data.user))
+  return data
 }
 
+// ── Logout ────────────────────────────────────
 export function logout() {
-  localStorage.removeItem('nexus_token')
-  localStorage.removeItem('nexus_user')
+  localStorage.removeItem(STORAGE_KEY_TOKEN)
+  localStorage.removeItem(STORAGE_KEY_USER)
 }
 
+// ── Getters ───────────────────────────────────
 export function getToken() {
-  return localStorage.getItem('nexus_token')
+  return localStorage.getItem(STORAGE_KEY_TOKEN)
 }
 
 export function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem('nexus_user'))
-  } catch {
-    return null
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_USER)) }
+  catch { return null }
 }
 
 export function isAuthenticated() {
   return !!getToken()
+}
+
+export function getCurrentUser() {
+  return getUser()
 }

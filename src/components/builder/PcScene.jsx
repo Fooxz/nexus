@@ -1,128 +1,116 @@
-// Responsabilidad única: orquestar el canvas 3D.
-// No sabe de posiciones, escalas, marcas ni luces.
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { CASE_CONFIGS, DEFAULT_CASE } from '../../data/caseConfigs'
-import SceneLights        from './scene/SceneLights'
-import SceneCamera        from './scene/SceneCamera'
-import PartRenderer       from './scene/PartRenderer'
-import SceneStrip         from './scene/SceneStrip'
-import SceneErrorBoundary from './scene/SceneErrorBoundary'
-import { CaseModel }      from './PartModels'
+// =============================================
+// NEXUS — PcScene (Placeholder)
+// Visualizador 3D desactivado en prototipo.
+// Se activa con los assets GLB en producción.
+// =============================================
 
-const SLOTS = ['motherboard','cpu','gpu','storage','psu','cooling']
+export default function PcScene({ build = {} }) {
+  const partes = [
+    { key: 'cpu',         label: 'CPU',         icon: '⚡' },
+    { key: 'motherboard', label: 'Placa Madre',  icon: '🔧' },
+    { key: 'gpu',         label: 'GPU',          icon: '🎮' },
+    { key: 'psu',         label: 'Fuente',       icon: '🔌' },
+    { key: 'cooling',     label: 'Cooler',       icon: '❄️' },
+  ]
 
-const isEmpty = (build) => !build?.cpu && !build?.gpu && !build?.ramSlots?.length
+  const ramSlots    = build?.ramSlots     ?? []
+  const storageSlots = build?.storageSlots ?? []
 
-// Placeholder que se muestra mientras carga un GLB
-function LoadingPart() {
-  return (
-    <mesh>
-      <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshStandardMaterial color="#2a2f3a" wireframe />
-    </mesh>
-  )
-}
-
-
-// Placeholder cuando un GLB falla — no rompe nada, solo no se muestra
-function FailedPart() {
-  return null
-}
-
-export default function PcScene({ build = {}, selectedCase = DEFAULT_CASE }) {
-  const config = CASE_CONFIGS[selectedCase] ?? CASE_CONFIGS[DEFAULT_CASE]
-
-  const normalizedBuild = {
-    ...build,
-    ram:     build.ramSlots?.[0]?.product     ?? build.ram     ?? null,
-    storage: build.storageSlots?.[0]?.product ?? build.storage ?? null,
-  }
+  const instalados = [
+    ...partes.filter(p => build?.[p.key]),
+    ...(ramSlots.length     > 0 ? [{ key: 'ram',     label: 'RAM',          icon: '💾' }] : []),
+    ...(storageSlots.length > 0 ? [{ key: 'storage',  label: 'Almacenamiento', icon: '💿' }] : []),
+  ]
 
   return (
-    <div className="sidebar-visual-wrap">
-      <div className="sidebar-case">
+    <div style={{
+      width: '100%',
+      aspectRatio: '16/9',
+      background: 'var(--bg-base)',
+      border: '1px solid var(--border-active)',
+      borderRadius: 'var(--radius-lg)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '1.5rem',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
 
-        {/* ErrorBoundary exterior: si el Canvas entero falla */}
-        <SceneErrorBoundary fallback={
-          <div className="visual-empty">
-            <div className="visual-empty-icon">⚠️</div>
-            <div className="visual-empty-text">
-              Error al cargar el visualizador 3D.<br/>
-              El builder sigue funcionando con normalidad.
-            </div>
+      {/* Grid decorativo */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `
+          repeating-linear-gradient(0deg,  transparent, transparent 29px, rgba(0,229,255,.04) 29px, rgba(0,229,255,.04) 30px),
+          repeating-linear-gradient(90deg, transparent, transparent 29px, rgba(0,229,255,.04) 29px, rgba(0,229,255,.04) 30px)
+        `,
+      }} />
+
+      {/* Orb decorativo */}
+      <div style={{
+        position: 'absolute',
+        width: '300px', height: '300px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(0,229,255,.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {instalados.length === 0 ? (
+        /* Estado vacío */
+        <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: '3rem', opacity: .2, marginBottom: '.75rem' }}>🖥️</div>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '.72rem',
+            letterSpacing: '2px', textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+          }}>
+            Selecciona componentes para ver el ensamblado
+          </p>
+        </div>
+      ) : (
+        /* Componentes instalados */
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '.6rem',
+            letterSpacing: '3px', textTransform: 'uppercase',
+            color: 'var(--accent)', marginBottom: '1.25rem', opacity: .8,
+          }}>
+            // Componentes instalados
+          </p>
+          <div style={{
+            display: 'flex', flexWrap: 'wrap',
+            gap: '.75rem', justifyContent: 'center',
+            maxWidth: '480px',
+          }}>
+            {instalados.map(p => (
+              <div key={p.key} style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid rgba(0,229,255,.25)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '.5rem .875rem',
+                display: 'flex', alignItems: 'center', gap: '.5rem',
+              }}>
+                <span style={{ fontSize: '1rem' }}>{p.icon}</span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '.65rem',
+                  letterSpacing: '1px', textTransform: 'uppercase',
+                  color: 'var(--accent)',
+                }}>
+                  {p.label}
+                </span>
+              </div>
+            ))}
           </div>
-        }>
-          <Canvas
-            camera={{ position: [6, 4, 10], fov: 45 }}
-            shadows
-            style={{ background: 'transparent' }}
-          >
-            <SceneLights />
-            <SceneCamera />
-
-            {/* Gabinete — con su propio Suspense + ErrorBoundary */}
-            <SceneErrorBoundary fallback={<FailedPart />}>
-              <Suspense fallback={<LoadingPart />}>
-                <CaseModel
-                  position={[0, 0, 0]}
-                  scale={config.scale}
-                  rotation={[0, 0, 0]}
-                />
-              </Suspense>
-            </SceneErrorBoundary>
-
-            {/* Cada componente tiene su propio Suspense + ErrorBoundary */}
-            {SLOTS.map(slot =>
-              normalizedBuild[slot] ? (
-                <SceneErrorBoundary key={slot} fallback={<FailedPart />}>
-                  <Suspense fallback={<LoadingPart />}>
-                    <PartRenderer
-                      type={slot}
-                      part={normalizedBuild[slot]}
-                      position={config.positions[slot]}
-                      scale={config.scales[slot]}
-                      rotation={config.rotations[slot]}
-                    />
-                  </Suspense>
-                </SceneErrorBoundary>
-              ) : null
-            )}
-
-            {/* Renderizar múltiples slots de RAM */}
-            {(build.ramSlots || []).map(r => {
-              const slotIdx = r.slot - 1
-              const pos = config.ramSlots?.[slotIdx] ?? config.positions.ram
-              return (
-                <SceneErrorBoundary key={`ram-${r.slot}`} fallback={<FailedPart />}>
-                  <Suspense fallback={<LoadingPart />}>
-                    <PartRenderer
-                      type="ram"
-                      part={r.product}
-                      position={pos}
-                      scale={config.scales.ram}
-                      rotation={config.rotations.ram}
-                    />
-                  </Suspense>
-                </SceneErrorBoundary>
-              )
-            })}
-          </Canvas>
-        </SceneErrorBoundary>
-
-        {isEmpty(normalizedBuild) && (
-          <div className="visual-empty">
-            <div className="visual-empty-icon">🖥️</div>
-            <div className="visual-empty-text">
-              Selecciona componentes para ver el ensamblado 3D
-            </div>
-          </div>
-        )}
-      </div>
-
-      <SceneStrip build={normalizedBuild} />
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '.58rem',
+            letterSpacing: '2px', textTransform: 'uppercase',
+            color: 'var(--text-muted)', marginTop: '1.25rem', opacity: .6,
+          }}>
+            Visualización 3D disponible con assets instalados
+          </p>
+        </div>
+      )}
     </div>
   )
 }
-
-
