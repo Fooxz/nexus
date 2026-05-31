@@ -1,59 +1,175 @@
-Nexus — Tienda y PC Builder (React + Vite)
+Accept current change
 
-Proyecto frontend para una tienda de componentes y un constructor de PC. Incluye páginas de catálogo, detalle de producto, carrito, comparador de móviles y un constructor 3D de PCs con modelos GLB en `public/modelos`.
+# NEXUS — Tienda de Tecnología
 
-**Tecnologías principales**
-- React
-- Vite
-- Context API para autenticación y carrito (`src/context`)
-- Componentes 3D (modelos `.glb` en `public/modelos`) para el `PcBuilder`
+Plataforma de comercio electrónico especializada en tecnología con PC Builder interactivo y comparador de celulares.
 
-**Estructura principal**
-- `public/`: recursos estáticos (imágenes, modelos 3D `.glb`, `vite.svg`).
-- `src/`: código fuente (componentes, páginas, servicios, context, datos y estilos).
+---
 
-**Carpetas relevantes**
-- `src/pages/`: páginas de la aplicación (rutas principales).
-- `src/components/`: componentes reutilizables (Navbar, Footer, ProductCard, Builder UI, Comparador, etc.).
-- `src/context/`: `AuthContext.jsx`, `CartContext.jsx` (estado global).
-- `src/services/`: abstracciones para llamadas/operaciones (productos, carrito, auth, builder, comparador).
-- `src/data/`: datos mock y configuraciones de slots para el builder.
-- `public/modelos/`: modelos 3D por categoría (cpu, gpu, ram, psu, storage, cases, cooling, motherboards).
+## Stack tecnológico
 
-**Páginas (por archivo) y qué contienen**
-- `src/pages/Home.jsx` — Página principal: banner, carrusel de destacados (`FeaturedCarousel`), secciones de productos y enlaces rápidos a categorías.
-- `src/pages/Productos.jsx` — Listado/tienda: muestra productos filtrables/ordenables, usa `ProductCard` y consume `productoService` para obtener datos.
-- `src/pages/ProductoDetalle.jsx` — Detalle de producto: galería, descripción, especificaciones, botón para añadir al carrito que actualiza `CartContext`.
-- `src/pages/Carrito.jsx` — Carrito de compras: lista de items, resumen de totales, acciones de cantidad/eliminar y checkout via `carritoService`.
-- `src/pages/ComparadorPage.jsx` — Interfaz de comparación: selecciona modelos (móviles) con `SelectorCelular`, muestra `EspecsGrid` y `RadarChart`, usa `comparadorService`.
-- `src/pages/PcBuilder.jsx` — Constructor de PC: interfaz visual y slots (`BuilderSidebar`, `BuilderSlots`, `PcScene`), usa `builderEngine` y `builderService` para validar compatibilidades y generar builds; carga modelos 3D desde `public/modelos`.
-- `src/pages/Login.jsx` — Form de inicio de sesión: usa `authService` y `AuthContext` para manejar sesión.
-- `src/pages/Register.jsx` — Registro de usuario: formulario y llamadas a `authService`.
+| Capa | Tecnología |
+|------|------------|
+| Frontend | React 18 + Vite |
+| 3D *(producción)* | Three.js + React Three Fiber |
+| Backend *(producción)* | Spring Boot 4 + Java 17 |
+| Base de datos *(producción)* | Oracle 18 XE |
+| Autenticación *(producción)* | JWT + Spring Security |
 
-**Cómo se conectan las páginas entre sí**
-- `main.jsx` monta la aplicación y el ruteo principal (React Router). `Navbar` contiene enlaces a `Home`, `Productos`, `Carrito`, `PcBuilder` y `Comparador`.
-- `ProtectedRoute.jsx` envuelve rutas que requieren autenticación (p. ej. checkout o páginas de usuario), consultando `AuthContext`.
-- `CartContext` provee funciones `addItem`, `removeItem`, `updateQty` y estado compartido entre `ProductoDetalle`, `ProductCard` y `Carrito`.
-- `AuthContext` mantiene el estado de usuario y token; `Login` y `Register` actualizan el contexto.
-- `PcBuilder` usa `domain/builderEngine.js` y `data/slotConfig.js` para validar compatibilidades y actualizar la vista 3D en `PcScene`.
-- Los servicios en `src/services/*.js` encapsulan la lógica de negocio y las operaciones sobre los datos (pueden apuntar a APIs reales o usar mocks de `src/data`).
+> **Nota:** Este es el prototipo navegable del frontend. El backend y la base de datos están definidos en la arquitectura pero no son requeridos para ejecutar el prototipo — todo funciona con datos mock.
 
-**Flujo típico de usuario**
-1. El usuario entra en `Home` y navega a `Productos` desde `Navbar`.
-2. Desde `Productos` abre `ProductoDetalle` y añade un producto al carrito (actualiza `CartContext`).
-3. El usuario va a `Carrito`, revisa el pedido y procede al checkout (posible ruta protegida por `ProtectedRoute`).
-4. Alternativamente, el usuario abre `PcBuilder` para armar una PC y guarda/añade la configuración al carrito.
-5. En `ComparadorPage` compara dispositivos (p. ej. móviles) usando datos de `mockCelulares` o `comparadorService`.
+---
 
-**Cómo ejecutar (desarrollo)**
+## Requisitos previos
+
+### Prototipo (solo frontend)
+- Node.js 18 o superior
+- npm 9 o superior
+
+### Versión completa *(cuando el backend esté integrado)*
+- Java 17 (Microsoft OpenJDK 17 recomendado)
+- Maven 3.8+
+- Oracle Database XE 18c con usuario `erick1` y PDB `XEPDB1`
+
+---
+
+## Instalación y despliegue
+
+### Prototipo — solo frontend
+
 ```bash
+# 1. Clonar el repositorio
+git clone <url-del-repositorio>
+cd nexus
+
+# 2. Instalar dependencias
 npm install
+
+# 3. Iniciar el servidor de desarrollo
 npm run dev
 ```
 
-**Notas para desarrolladores**
-- Los modelos 3D grandes están en `public/modelos`; mantener la estructura por carpetas para que `PcScene` pueda cargarlos dinámicamente.
-- Para pruebas rápidas, `src/data/mockComponentesPc.js` y `src/data/mockCelulares.js` contienen datos locales.
-- Si añades nuevas rutas, registra los componentes en el ruteador de `App.jsx`/`main.jsx` y actualiza `Navbar.jsx`.
+La aplicación estará disponible en **http://localhost:5173**
 
-Si quieres, puedo: listar el contenido de cada archivo de `src/pages/` completo, generar diagramas de conexión entre páginas, o añadir secciones de documentación detallada por componente.
+### Versión completa *(con backend)*
+
+```bash
+# 1. Iniciar el backend
+cd proyectoNEXUS
+./mvnw spring-boot:run
+# Disponible en http://localhost:8080
+
+# 2. Iniciar el frontend
+cd nexus
+npm install
+npm run dev
+# Disponible en http://localhost:5173
+```
+
+---
+
+## Pantallas del sistema
+
+| Ruta | Pantalla | Acceso |
+|------|----------|--------|
+| `/` | Home | Público |
+| `/login` | Iniciar sesión | Público |
+| `/register` | Crear cuenta | Público |
+| `/productos` | Catálogo de celulares | Público |
+| `/comparador` | Comparador de celulares | Público |
+| `/pc-builder` | PC Builder | Requiere login |
+| `/carrito` | Carrito de compras | Público |
+
+---
+
+## Roles de usuario
+
+| Rol | Descripción | Acceso |
+|-----|-------------|--------|
+| `ROLE_USER` | Usuario registrado | Catálogo, PC Builder, Comparador, Carrito |
+| `ROLE_ADMIN` | Administrador | Todo lo anterior + gestión de productos *(backend)* |
+
+---
+
+## Credenciales de prueba
+
+El prototipo usa autenticación mock con `localStorage`. Para probar:
+
+1. Ir a `/register`
+2. Crear cuenta con cualquier email y contraseña (mínimo 6 caracteres)
+3. Iniciar sesión en `/login`
+4. Acceder a `/pc-builder`
+
+---
+
+## Endpoints del API *(backend — producción)*
+
+### Autenticación
+```
+POST /api/auth/register   → Registrar usuario
+POST /api/auth/login      → Iniciar sesión → devuelve JWT
+```
+
+### Productos
+```
+GET /api/productos                        → Todos los productos
+GET /api/productos/categoria/{categoria}  → Por categoría
+```
+
+---
+
+## Estructura del proyecto
+
+```
+nexus/                          ← Frontend React (prototipo)
+├── src/
+│   ├── context/                ← AuthContext global
+│   ├── domain/                 ← Lógica pura del builder
+│   ├── adapters/               ← Transformación de datos
+│   ├── services/               ← Comunicación con API (USE_MOCK=true)
+│   ├── data/                   ← Mock data temporal
+│   ├── hooks/                  ← Custom hooks
+│   ├── components/             ← Componentes reutilizables
+│   └── pages/                  ← Páginas de la app
+└── public/modelos/             ← Modelos 3D .glb (producción)
+
+
+
+proyectoNEXUS/                  ← Backend Spring Boot (producción)
+└── src/main/java/org/nexus/backend/
+    ├── controller/             ← Endpoints HTTP
+    ├── service/                ← Lógica de negocio
+    ├── repository/             ← Acceso a Oracle
+    ├── model/entity/           ← Entidades JPA
+    ├── dto/                    ← Contratos de API
+    └── security/               ← JWT + Spring Security
+```
+
+---
+
+## Variables de entorno *(backend — producción)*
+
+El archivo `application.properties` contiene la configuración de la base de datos:
+
+```properties
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521/XEPDB1
+spring.datasource.username=erick1
+spring.datasource.password=123456
+jwt.secret=nexus2026clavesecretamuylargoparaqueseasegura
+jwt.expiration=86400000
+```
+
+> ⚠️ En producción estas credenciales deben moverse a variables de entorno.
+
+---
+
+## Notas del prototipo
+
+- Todos los datos son **mock** — no requiere backend para ejecutarse.
+- La autenticación es simulada via `localStorage`. En producción se integra con Spring Boot + JWT.
+- El visualizador 3D del PC Builder requiere los archivos `.glb` en `/public/modelos/` — desactivado en el prototipo.
+- El campo `USE_MOCK = true` en cada service controla el cambio a backend real sin tocar más código.
+
+---
+
+*Proyecto universitario — Ingeniería de Software 2026*

@@ -1,271 +1,122 @@
-// src/pages/Productos.jsx
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import Navbar             from '../components/Navbar'
-import Footer             from '../components/Footer'
-import ProductCard        from '../components/ProductCard'
-import FeaturedCarousel   from '../components/FeaturedCarousel'
-import { useCart }        from '../context/CartContext'
-import { CELULARES }      from '../data/mockCelulares'
-import '../styles/productos/productLayout.css'
+import { useState, useEffect } from 'react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import { CELULARES } from '../data/celulares'
 
-const LABELS = {
-  cpu:'CPU', gpu:'GPU', ram:'RAM', motherboard:'Motherboard',
-  storage:'Almacenamiento', psu:'Fuente', case:'Gabinete', cooling:'Refrigeración',
-}
-
-function normalizePcPart(p, categoria) {
-  const {
-    nucleos, hilos, velocidad, tdp, vram, potencia,
-    capacidad, tipo, velocidadLec, chipset, socket,
-    formatoRam, slotsRam, certificacion, modular,
-    formato, ventanas, tdpSoporte,
-  } = p
-  const specs = {}
-  if (socket)        specs['Socket']    = socket
-  if (nucleos)       specs['Núcleos']   = `${nucleos}C/${hilos ?? ''}T`
-  if (velocidad)     specs['Velocidad'] = velocidad
-  if (tdp)           specs['TDP']       = `${tdp}W`
-  if (vram)          specs['VRAM']      = vram
-  if (potencia && categoria === 'gpu') specs['TDP']      = `${potencia}W`
-  if (capacidad)     specs['Capacidad'] = capacidad
-  if (tipo)          specs['Tipo']      = tipo
-  if (velocidadLec)  specs['Lectura']   = velocidadLec
-  if (chipset)       specs['Chipset']   = chipset
-  if (formatoRam)    specs['RAM']       = `${formatoRam} x${slotsRam ?? ''}`
-  if (certificacion) specs['Cert.']     = certificacion
-  if (modular !== undefined) specs['Modular'] = modular ? 'Sí' : 'No'
-  if (potencia && categoria === 'psu') specs['Potencia'] = `${potencia}W`
-  if (formato)       specs['Formato']   = formato
-  if (ventanas !== undefined) specs['Ventana'] = ventanas ? 'Sí' : 'No'
-  if (tdpSoporte)    specs['TDP max']   = `${tdpSoporte}W`
-  return { ...p, categoria: LABELS[categoria] ?? categoria, precioNormal: undefined, descuento: 0, specs }
-}
-
-function normalizeCelular(c) {
-  const { pantalla, procesador, ram, almacenamiento, bateria } = c.specs ?? {}
-  const specs = {}
-  if (pantalla)       specs['Pantalla'] = pantalla
-  if (procesador)     specs['CPU']      = procesador
-  if (ram)            specs['RAM']      = ram
-  if (almacenamiento) specs['Storage']  = almacenamiento
-  if (bateria)        specs['Batería']  = bateria
-  return {
-    id: c.id, nombre: `${c.marca} ${c.modelo}`,
-    marca: c.marca, precio: c.precio,
-    precioNormal: c.precioNormal, descuento: c.descuento ?? 0,
-    imagen: c.imagen, categoria: 'Celular', specs, _raw: c,
-  }
-}
-
-const SORT_OPTIONS = [
-  { value: 'default',     label: 'Relevancia' },
-  { value: 'precio-asc',  label: 'Precio: menor → mayor' },
-  { value: 'precio-desc', label: 'Precio: mayor → menor' },
-  { value: 'nombre-asc',  label: 'Nombre A → Z' },
-]
-
-const CATEGORY_ALIASES = {
-  Celulares: 'Celular',
-  celulares: 'Celular',
-  Celular: 'Celular',
-  celular: 'Celular',
-  Laptops: 'Laptop',
-  laptops: 'Laptop',
-  Televisores: 'Televisor',
-  televisores: 'Televisor',
-  Drones: 'Drone',
-  drones: 'Drone',
-  'Motos eléctricas': 'Moto eléctrica',
-  'motos eléctricas': 'Moto eléctrica',
-  Accesorios: 'Accesorios',
-  accesorios: 'Accesorios',
-  Cargadores: 'Cargadores',
-  cargadores: 'Cargadores',
-}
+const MARCAS = ['Todas', 'Apple', 'Samsung', 'Xiaomi', 'Huawei', 'Motorola', 'Google']
 
 export default function Productos() {
-  const navigate                   = useNavigate()
-  const [searchParams]             = useSearchParams()
-  const { agregar, estaEnCarrito } = useCart()
-
-  const [todosLosProductos, setTodosLosProductos] = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState(null)
-  const [busqueda,  setBusqueda]  = useState('')
-  const [catActiva, setCatActiva] = useState('Todos')
-  const [orden,     setOrden]     = useState('default')
-  const [agregado,  setAgregado]  = useState(null)
+  const [marca, setMarca] = useState('Todas')
+  const [query, setQuery] = useState('')
+  const [items, setItems] = useState(CELULARES)
 
   useEffect(() => {
-    async function cargar() {
-      try {
-        setLoading(true)
-        const { PC_PARTS } = await import('../data/mockComponentesPc')
-        const pcNormalizados  = Object.entries(PC_PARTS).flatMap(([cat, items]) =>
-          items.map(item => normalizePcPart(item, cat))
-        )
-        const celNormalizados = CELULARES.map(normalizeCelular)
-        setTodosLosProductos([...pcNormalizados, ...celNormalizados])
-      } catch (e) {
-        setError(e.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-    cargar()
-  }, [])
-
-  useEffect(() => {
-    const requested = searchParams.get('cat')
-    if (!requested || requested.toLowerCase() === 'todo') {
-      setCatActiva('Todos')
-      return
-    }
-    setCatActiva(CATEGORY_ALIASES[requested] ?? requested)
-  }, [searchParams])
-
-  const categorias = useMemo(() => {
-    const unicas = [...new Set(todosLosProductos.map(p => p.categoria))]
-    return ['Todos', ...unicas]
-  }, [todosLosProductos])
-
-  const productosFiltrados = useMemo(() => {
-    let lista = todosLosProductos
-    if (catActiva !== 'Todos') lista = lista.filter(p => p.categoria === catActiva)
-    const q = busqueda.trim().toLowerCase()
-    if (q) lista = lista.filter(p =>
-      p.nombre.toLowerCase().includes(q) ||
-      (p.marca ?? '').toLowerCase().includes(q) ||
-      (p.categoria ?? '').toLowerCase().includes(q)
+    let result = CELULARES
+    if (marca !== 'Todas') result = result.filter(c => c.marca === marca)
+    if (query) result = result.filter(c =>
+      c.modelo.toLowerCase().includes(query.toLowerCase())
     )
-    if (orden === 'precio-asc')  lista = [...lista].sort((a, b) => a.precio - b.precio)
-    if (orden === 'precio-desc') lista = [...lista].sort((a, b) => b.precio - a.precio)
-    if (orden === 'nombre-asc')  lista = [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre))
-    return lista
-  }, [todosLosProductos, catActiva, busqueda, orden])
-
-  const handleAgregarCarrito = (producto) => {
-    agregar(producto)
-    setAgregado(producto.id)
-    setTimeout(() => setAgregado(null), 1500)
-  }
-
-  const handleVerDetalle = (producto) => {
-    navigate(`/productos/${producto.id}`, { state: { producto } })
-  }
+    setItems(result)
+  }, [marca, query])
 
   return (
     <>
       <Navbar />
-      <main className="productos-page">
+      <main style={{ paddingTop: '80px', minHeight: '100vh', background: 'var(--bg)' }}>
+        <div className="container" style={{ paddingBlock: '3rem' }}>
 
-        {/* ── HEADER ── */}
-        <section className="productos-header">
-          <div className="productos-header__bg-word" aria-hidden="true">STORE</div>
-          <div className="container productos-header__inner">
-            <p className="productos-header__eyebrow">Catálogo completo</p>
-            <h1 className="productos-header__title">
-              <span className="outline">Nuestros</span> <span className="accent">Productos</span>
+          <div style={{ marginBottom: '2rem' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '.7rem',
+              letterSpacing: '4px', textTransform: 'uppercase',
+              color: 'var(--accent)', marginBottom: '.5rem' }}>Catálogo</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem',
+              fontWeight: 900, letterSpacing: '2px', textTransform: 'uppercase' }}>
+              Celulares
             </h1>
-            <div className="productos-header__meta">
-              <span><span className="dot" />{loading ? '—' : todosLosProductos.length} referencias</span>
-              <span><span className="dot" />{categorias.length - 1} categorías</span>
-            </div>
           </div>
-        </section>
 
-        {/* ── CARRUSEL DESTACADOS ── */}
-        {!loading && (
-          <FeaturedCarousel productos={todosLosProductos} />
-        )}
-
-        {/* ── TOOLBAR ── */}
-        <div className="container">
-          <div className="productos-toolbar">
-            <div className="search-box">
-              <svg className="search-box__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-              <input
-                type="text" className="search-box__input"
-                placeholder="Buscar producto..."
-                value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              />
-            </div>
-            <div className="cat-tabs">
-              {categorias.map(cat => (
-                <button
-                  key={cat}
-                  className={`cat-tab ${catActiva === cat ? 'active' : ''}`}
-                  onClick={() => setCatActiva(cat)}
-                >{cat}</button>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap',
+            marginBottom: '2rem', alignItems: 'center' }}>
+            <input
+              type="text" placeholder="Buscar modelo..."
+              value={query} onChange={e => setQuery(e.target.value)}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)',
+                color: 'var(--text)', padding: '.6rem 1rem', borderRadius: '2px',
+                fontFamily: 'var(--font-body)', fontSize: '.9rem',
+                outline: 'none', width: '220px' }}
+            />
+            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+              {MARCAS.map(m => (
+                <button key={m} onClick={() => setMarca(m)}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: '.65rem',
+                    letterSpacing: '2px', textTransform: 'uppercase',
+                    padding: '.4rem 1rem', borderRadius: '1px', cursor: 'pointer',
+                    border: '1px solid ' + (marca === m ? 'var(--accent)' : 'var(--border)'),
+                    background: marca === m ? 'var(--accent-dim)' : 'transparent',
+                    color: marca === m ? 'var(--accent)' : 'var(--muted)' }}>
+                  {m}
+                </button>
               ))}
             </div>
-            <div className="toolbar-right">
-              <span className="results-count"><span>{productosFiltrados.length}</span> resultados</span>
-              <select className="sort-select" value={orden} onChange={e => setOrden(e.target.value)}>
-                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
           </div>
-        </div>
 
-        {/* ── GRID ── */}
-        <div className="container productos-body">
-          {error ? (
-            <p style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)', fontSize: '.8rem' }}>
-              Error: {error}
-            </p>
-          ) : loading ? (
-            <div className="productos-grid">
-              {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-          ) : (
-            <div className="productos-grid">
-              {productosFiltrados.length === 0 ? (
-                <div className="productos-empty">
-                  <div className="productos-empty__icon">◈</div>
-                  <p className="productos-empty__title">Sin resultados</p>
-                  <p className="productos-empty__desc">Prueba con otra búsqueda o categoría</p>
+          <div style={{ display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '1.5rem' }}>
+            {items.map(cel => (
+              <div key={cel.id}
+                style={{ background: 'var(--bg-card)',
+                  border: '1px solid var(--border)', borderRadius: '4px',
+                  overflow: 'hidden', transition: 'border-color .2s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                <div style={{ background: 'var(--bg-raised)', padding: '1.5rem',
+                  display: 'flex', justifyContent: 'center' }}>
+                  <img src={cel.imagen} alt={cel.modelo}
+                    style={{ height: '140px', objectFit: 'contain' }}
+                    onError={e => e.target.style.display = 'none'} />
                 </div>
-              ) : (
-                productosFiltrados.map(p => (
-                  <ProductCard
-                    key={p.id}
-                    producto={p}
-                    enCarrito={estaEnCarrito(p.id)}
-                    agregadoFeedback={agregado === p.id}
-                    onVerDetalle={handleVerDetalle}
-                    onAgregarCarrito={handleAgregarCarrito}
-                  />
-                ))
-              )}
-            </div>
+                <div style={{ padding: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '.6rem',
+                    letterSpacing: '2px', textTransform: 'uppercase',
+                    color: 'var(--accent)', marginBottom: '.25rem' }}>{cel.marca}</p>
+                  <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700,
+                    fontSize: '1rem', letterSpacing: '1px', marginBottom: '.5rem' }}>
+                    {cel.modelo}
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '.75rem',
+                    color: 'var(--muted)', marginBottom: '.75rem' }}>
+                    {cel.specs.ram} · {cel.specs.almacenamiento}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700,
+                      color: 'var(--accent)', fontSize: '.9rem' }}>
+                      ${cel.precio.toLocaleString()}
+                    </span>
+                    <button style={{ fontFamily: 'var(--font-mono)', fontSize: '.6rem',
+                      letterSpacing: '1px', textTransform: 'uppercase',
+                      padding: '.35rem .75rem', background: 'var(--accent)',
+                      color: 'var(--bg)', border: 'none', borderRadius: '2px',
+                      cursor: 'pointer' }}>
+                      Ver más
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {items.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--muted)',
+              fontFamily: 'var(--font-mono)', marginTop: '3rem' }}>
+              No se encontraron resultados.
+            </p>
           )}
         </div>
       </main>
       <Footer />
     </>
-  )
-}
-
-function SkeletonCard() {
-  return (
-    <div className="prod-card" style={{ pointerEvents: 'none' }}>
-      <div className="prod-card__img-wrap" style={{ background: 'var(--bg-elevated)' }}>
-        <div style={{ width: '60%', height: '60%', background: 'var(--border)', borderRadius: 2 }} />
-      </div>
-      <div className="prod-card__body">
-        <div style={{ height: 8,  width: '35%', background: 'var(--border)',      borderRadius: 2, marginBottom: 8 }} />
-        <div style={{ height: 14, width: '80%', background: 'var(--bg-elevated)', borderRadius: 2 }} />
-        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-          {[40,55,35].map(w => <div key={w} style={{ height: 18, width: w, background: 'var(--border)', borderRadius: 2 }} />)}
-        </div>
-      </div>
-      <div className="prod-card__footer">
-        <div style={{ height: 18, width: 70, background: 'var(--accent-dim)', borderRadius: 2 }} />
-      </div>
-    </div>
   )
 }

@@ -1,256 +1,116 @@
-// Responsabilidad única: orquestar el canvas 3D.
-//
-// SEPARACIÓN DE RESPONSABILIDADES:
-//   caseConfigs   → posición/rotación del chasis en escena
-//                   posición de motherboard, psu
-//                   posición/scale/rotation de storage HDD/SATA
-//   boardGeometry → scale/rotation de motherboard
-//                   posición/scale/rotation de cpu, gpu, cooling, m2 (NVMe)
-//                   posiciones/scale/rotation de ram
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { CASE_CONFIGS, DEFAULT_CASE } from '../../data/caseConfigs'
-import { BOARD_GEOMETRY }             from '../../data/boardGeometry'
-import SceneLights        from './scene/SceneLights'
-import SceneCamera        from './scene/SceneCamera'
-import PartRenderer       from './scene/PartRenderer'
-import SceneStrip         from './scene/SceneStrip'
-import SceneErrorBoundary from './scene/SceneErrorBoundary'
-import { CaseModel, CaseGamerModel, CaseProModel, FanModel } from './PartModels'
+// =============================================
+// NEXUS — PcScene (Placeholder)
+// Visualizador 3D desactivado en prototipo.
+// Se activa con los assets GLB en producción.
+// =============================================
 
-const CASE_MODELS = {
-  'mid-tower':  CaseModel,
-  'case-gamer': CaseGamerModel,
-  'case-pro':   CaseProModel,
-}
+export default function PcScene({ build = {} }) {
+  const partes = [
+    { key: 'cpu',         label: 'CPU',         icon: '⚡' },
+    { key: 'motherboard', label: 'Placa Madre',  icon: '🔧' },
+    { key: 'gpu',         label: 'GPU',          icon: '🎮' },
+    { key: 'psu',         label: 'Fuente',       icon: '🔌' },
+    { key: 'cooling',     label: 'Cooler',       icon: '❄️' },
+  ]
 
-const isEmpty = (build) => !build?.cpu && !build?.gpu && !build?.ramSlots?.length
+  const ramSlots    = build?.ramSlots     ?? []
+  const storageSlots = build?.storageSlots ?? []
 
-function LoadingPart() {
-  return (
-    <mesh>
-      <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshStandardMaterial color="#2a2f3a" wireframe />
-    </mesh>
-  )
-}
-
-function FailedPart() { return null }
-
-export default function PcScene({ build = {}, caseId, selectedCase }) {
-  const resolvedCase = caseId ?? selectedCase ?? DEFAULT_CASE
-  const config       = CASE_CONFIGS[resolvedCase] ?? CASE_CONFIGS[DEFAULT_CASE]
-  const ActiveCase   = CASE_MODELS[resolvedCase] ?? CaseModel
-  const boardGeo     = build.motherboard?.id ? BOARD_GEOMETRY[build.motherboard.id] : null
-
-  // Posición y rotación del chasis — campos opcionales, fallback a [0,0,0]
-  const casePosition = config.position ?? [0, 0, 0]
-  const caseRotation = config.rotation ?? [0, 0, 0]
-
-  // Storage — NVMe va en la board, HDD/SATA va en bahía del chasis
-  const storageProduct = build.storageSlots?.[0]?.product ?? null
-  const esNvme         = storageProduct?.tipo === 'NVMe'
-  const esHdd          = storageProduct && !esNvme
-
-  // RAM resuelta por la board
-  const ramResolved = (() => {
-    if (!build.ramSlots?.length || !boardGeo) return []
-    return build.ramSlots
-      .filter(r => r?.product && r.slot <= boardGeo.slotsRam)
-      .map(r => {
-        const pos = boardGeo.ramSlots?.[r.slot - 1]
-        if (!pos) return null
-        return { ...r, position: pos }
-      })
-      .filter(Boolean)
-  })()
+  const instalados = [
+    ...partes.filter(p => build?.[p.key]),
+    ...(ramSlots.length     > 0 ? [{ key: 'ram',     label: 'RAM',          icon: '💾' }] : []),
+    ...(storageSlots.length > 0 ? [{ key: 'storage',  label: 'Almacenamiento', icon: '💿' }] : []),
+  ]
 
   return (
-    <div className="sidebar-visual-wrap">
-      <div className="sidebar-case">
+    <div style={{
+      width: '100%',
+      aspectRatio: '16/9',
+      background: 'var(--bg-base)',
+      border: '1px solid var(--border-active)',
+      borderRadius: 'var(--radius-lg)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '1.5rem',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
 
-        <SceneErrorBoundary fallback={
-          <div className="visual-empty">
-            <div className="visual-empty-icon">⚠️</div>
-            <div className="visual-empty-text">
-              Error al cargar el visualizador 3D.<br/>
-              El builder sigue funcionando con normalidad.
-            </div>
-          </div>
-        }>
-          <Canvas
-            camera={{ position: [6, 4, 10], fov: 45 }}
-            shadows
-            style={{ background: 'transparent' }}
-          >
-            <SceneLights />
-            <SceneCamera />
-
-            {/* Chasis — position y rotation vienen de caseConfigs */}
-            <SceneErrorBoundary fallback={<FailedPart />}>
-              <Suspense fallback={<LoadingPart />}>
-                <ActiveCase
-                  position={casePosition}
-                  scale={config.scale}
-                  rotation={caseRotation}
-                />
-              </Suspense>
-            </SceneErrorBoundary>
-
-            {config.fan && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <FanModel
-                    position={config.fan.position}
-                    rotation={config.fan.rotation}
-                    scale={config.fan.scale}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* Motherboard — posición del chasis + offset propio de la board */}
-            {build.motherboard && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="motherboard"
-                    part={build.motherboard}
-                    position={[
-                      (config.positions.motherboard?.[0] ?? 0) + (boardGeo?.positionOffset?.[0] ?? 0),
-                      (config.positions.motherboard?.[1] ?? 0) + (boardGeo?.positionOffset?.[1] ?? 0),
-                      (config.positions.motherboard?.[2] ?? 0) + (boardGeo?.positionOffset?.[2] ?? 0),
-                    ]}
-                    scale={boardGeo?.scale       ?? 0.5}
-                    rotation={boardGeo?.rotation ?? [Math.PI / 2, 0, 0]}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* PSU — todo del chasis */}
-            {build.psu && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="psu"
-                    part={build.psu}
-                    position={config.positions.psu}
-                    scale={config.scales.psu}
-                    rotation={config.rotations.psu}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* Storage HDD/SATA — bahía del chasis */}
-            {esHdd && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="storage"
-                    part={storageProduct}
-                    position={config.positions.storageSata ?? config.positions.storage}
-                    scale={config.scales.storageSata       ?? config.scales.storage}
-                    rotation={config.rotations.storageSata ?? config.rotations.storage}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* Storage NVMe M.2 — ranura en la board */}
-            {esNvme && boardGeo?.m2 && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="storage"
-                    part={storageProduct}
-                    position={boardGeo.m2.position}
-                    scale={boardGeo.m2.scale}
-                    rotation={boardGeo.m2.rotation}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* CPU — todo de la board */}
-            {build.cpu && boardGeo?.cpu && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="cpu"
-                    part={build.cpu}
-                    position={boardGeo.cpu.position}
-                    scale={boardGeo.cpu.scale}
-                    rotation={boardGeo.cpu.rotation}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* GPU — todo de la board */}
-            {build.gpu && boardGeo?.gpu && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="gpu"
-                    part={build.gpu}
-                    position={boardGeo.gpu.position}
-                    scale={boardGeo.gpu.scale}
-                    rotation={boardGeo.gpu.rotation}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* Cooling — todo de la board */}
-            {build.cooling && boardGeo?.cooling && (
-              <SceneErrorBoundary fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="cooling"
-                    part={build.cooling}
-                    position={boardGeo.cooling.position}
-                    scale={boardGeo.cooling.scale}
-                    rotation={boardGeo.cooling.rotation}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            )}
-
-            {/* RAM — posición, scale y rotation de la board */}
-            {ramResolved.map(r => (
-              <SceneErrorBoundary key={`ram-${r.slot}`} fallback={<FailedPart />}>
-                <Suspense fallback={<LoadingPart />}>
-                  <PartRenderer
-                    type="ram"
-                    part={r.product}
-                    position={r.position}
-                    scale={boardGeo.ramScale}
-                    rotation={boardGeo.ramRotation}
-                  />
-                </Suspense>
-              </SceneErrorBoundary>
-            ))}
-
-          </Canvas>
-        </SceneErrorBoundary>
-
-        {isEmpty(build) && (
-          <div className="visual-empty">
-            <div className="visual-empty-icon">🖥️</div>
-            <div className="visual-empty-text">
-              Selecciona componentes para ver el ensamblado 3D
-            </div>
-          </div>
-        )}
-      </div>
-
-      <SceneStrip build={{
-        ...build,
-        ram:     build.ramSlots?.[0]?.product ?? null,
-        storage: storageProduct,
+      {/* Grid decorativo */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `
+          repeating-linear-gradient(0deg,  transparent, transparent 29px, rgba(0,229,255,.04) 29px, rgba(0,229,255,.04) 30px),
+          repeating-linear-gradient(90deg, transparent, transparent 29px, rgba(0,229,255,.04) 29px, rgba(0,229,255,.04) 30px)
+        `,
       }} />
+
+      {/* Orb decorativo */}
+      <div style={{
+        position: 'absolute',
+        width: '300px', height: '300px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(0,229,255,.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {instalados.length === 0 ? (
+        /* Estado vacío */
+        <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: '3rem', opacity: .2, marginBottom: '.75rem' }}>🖥️</div>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '.72rem',
+            letterSpacing: '2px', textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+          }}>
+            Selecciona componentes para ver el ensamblado
+          </p>
+        </div>
+      ) : (
+        /* Componentes instalados */
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '.6rem',
+            letterSpacing: '3px', textTransform: 'uppercase',
+            color: 'var(--accent)', marginBottom: '1.25rem', opacity: .8,
+          }}>
+            // Componentes instalados
+          </p>
+          <div style={{
+            display: 'flex', flexWrap: 'wrap',
+            gap: '.75rem', justifyContent: 'center',
+            maxWidth: '480px',
+          }}>
+            {instalados.map(p => (
+              <div key={p.key} style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid rgba(0,229,255,.25)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '.5rem .875rem',
+                display: 'flex', alignItems: 'center', gap: '.5rem',
+              }}>
+                <span style={{ fontSize: '1rem' }}>{p.icon}</span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '.65rem',
+                  letterSpacing: '1px', textTransform: 'uppercase',
+                  color: 'var(--accent)',
+                }}>
+                  {p.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '.58rem',
+            letterSpacing: '2px', textTransform: 'uppercase',
+            color: 'var(--text-muted)', marginTop: '1.25rem', opacity: .6,
+          }}>
+            Visualización 3D disponible con assets instalados
+          </p>
+        </div>
+      )}
     </div>
   )
 }
