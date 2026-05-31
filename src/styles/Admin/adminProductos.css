@@ -1,0 +1,205 @@
+/* =============================================
+   NEXUS — ADMIN / Productos
+   Tabla CRUD + formulario
+   ============================================= */
+
+/* ── TOOLBAR ── */
+.admin-prod-toolbar {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.admin-prod-search {
+  position: relative; flex: 1; min-width: 200px; max-width: 320px;
+}
+.admin-prod-search__icon {
+  position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); width: 13px; height: 13px; pointer-events: none;
+}
+.admin-prod-search__input {
+  width: 100%; font-family: var(--font-mono); font-size: .7rem;
+  letter-spacing: 1px; padding: .55rem .75rem .55rem 2.2rem;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 2px; color: var(--text-primary); outline: none;
+  transition: border-color .2s;
+}
+.admin-prod-search__input:focus { border-color: var(--accent); }
+.admin-prod-search__input::placeholder { color: var(--text-muted); }
+
+.admin-filter-select {
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: 1px;
+  padding: .55rem .85rem; background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: 2px;
+  color: var(--text-secondary); outline: none; cursor: pointer;
+}
+.admin-filter-select:focus { border-color: var(--accent); }
+.admin-filter-select option { background: var(--bg-elevated); }
+
+.admin-btn-new {
+  font-family: var(--font-mono); font-size: .68rem;
+  letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  padding: .55rem 1.25rem; margin-left: auto;
+  background: var(--accent); color: var(--bg-base);
+  border: none; border-radius: 2px; cursor: pointer;
+  display: flex; align-items: center; gap: .4rem;
+  transition: opacity .2s;
+}
+.admin-btn-new:hover { opacity: .85; }
+
+/* ── TABLA PRODUCTOS ── */
+.admin-prod-table-wrap {
+  border: 1px solid var(--border); overflow-x: auto;
+}
+.admin-prod-table {
+  width: 100%; border-collapse: collapse; min-width: 700px;
+}
+.admin-prod-table th {
+  background: var(--bg-elevated);
+  font-family: var(--font-mono); font-size: .6rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); padding: .75rem 1rem;
+  text-align: left; border-bottom: 1px solid var(--border);
+  white-space: nowrap; cursor: pointer; user-select: none;
+  transition: color .2s;
+}
+.admin-prod-table th:hover { color: var(--accent); }
+.admin-prod-table th.sorted { color: var(--accent); }
+
+.admin-prod-table td {
+  padding: .75rem 1rem; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: .7rem;
+  color: var(--text-secondary); background: var(--bg-card);
+  transition: background .15s; vertical-align: middle;
+}
+.admin-prod-table tr:last-child td { border-bottom: none; }
+.admin-prod-table tr:hover td { background: var(--bg-elevated); }
+
+.admin-prod-table__img {
+  width: 40px; height: 40px; object-fit: contain;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 2px; padding: 3px;
+}
+.admin-prod-table__name {
+  font-family: var(--font-display); font-size: .8rem;
+  font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--text-primary);
+}
+.admin-prod-table__actions {
+  display: flex; gap: .4rem; justify-content: flex-end;
+}
+.admin-btn-edit, .admin-btn-delete {
+  font-family: var(--font-mono); font-size: .6rem;
+  letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700;
+  padding: .3rem .7rem; border-radius: 2px; cursor: pointer;
+  transition: all .2s;
+}
+.admin-btn-edit {
+  background: transparent; border: 1px solid var(--border-active);
+  color: var(--text-secondary);
+}
+.admin-btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+.admin-btn-delete {
+  background: transparent; border: 1px solid rgba(255,59,92,.3);
+  color: var(--danger);
+}
+.admin-btn-delete:hover { background: rgba(255,59,92,.1); }
+
+/* ── MODAL FORMULARIO ── */
+.admin-form-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(8,11,16,.88); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.admin-form-modal {
+  background: var(--bg-elevated); border: 1px solid var(--border-active);
+  border-radius: var(--radius-lg); width: min(620px, 100%);
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUp .25s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.admin-form-header {
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: var(--bg-elevated); z-index: 1;
+}
+.admin-form-title {
+  font-family: var(--font-display); font-size: 1rem;
+  font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+}
+.admin-form-close {
+  background: none; border: 1px solid var(--border);
+  color: var(--text-muted); width: 28px; height: 28px;
+  border-radius: 2px; cursor: pointer; font-size: .8rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .2s, border-color .2s;
+}
+.admin-form-close:hover { color: var(--danger); border-color: var(--danger); }
+
+.admin-form-body {
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.admin-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.admin-field { display: flex; flex-direction: column; gap: .4rem; }
+.admin-field__label {
+  font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+}
+.admin-field__input,
+.admin-field__select,
+.admin-field__textarea {
+  font-family: var(--font-mono); font-size: .78rem; letter-spacing: .5px;
+  padding: .6rem .85rem; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 2px;
+  color: var(--text-primary); outline: none;
+  transition: border-color .2s, background .2s; width: 100%;
+}
+.admin-field__input:focus,
+.admin-field__select:focus,
+.admin-field__textarea:focus { border-color: var(--accent); background: var(--bg-elevated); }
+.admin-field__input::placeholder,
+.admin-field__textarea::placeholder { color: var(--text-muted); }
+.admin-field__input.error,
+.admin-field__select.error { border-color: var(--danger); }
+.admin-field__select option { background: var(--bg-elevated); }
+.admin-field__textarea { resize: vertical; min-height: 80px; }
+
+.admin-form-footer {
+  padding: 1rem 1.5rem; border-top: 1px solid var(--border);
+  display: flex; gap: .75rem; justify-content: flex-end;
+}
+.admin-btn-cancel {
+  font-family: var(--font-mono); font-size: .68rem;
+  letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  padding: .6rem 1.25rem; background: transparent;
+  border: 1px solid var(--border-active); color: var(--text-muted);
+  border-radius: 2px; cursor: pointer; transition: all .2s;
+}
+.admin-btn-cancel:hover { border-color: var(--danger); color: var(--danger); }
+.admin-btn-save {
+  font-family: var(--font-mono); font-size: .68rem;
+  letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  padding: .6rem 1.5rem; background: var(--accent);
+  color: var(--bg-base); border: none; border-radius: 2px;
+  cursor: pointer; transition: opacity .2s;
+}
+.admin-btn-save:hover { opacity: .85; }
+.admin-btn-save:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── EMPTY STATE ── */
+.admin-empty {
+  padding: 4rem 2rem; text-align: center;
+  border: 1px solid var(--border); background: var(--bg-card);
+}
+.admin-empty__icon { font-size: 2.5rem; opacity: .12; margin-bottom: 1rem; }
+.admin-empty__text {
+  font-family: var(--font-display); font-size: 1rem;
+  font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-secondary);
+}

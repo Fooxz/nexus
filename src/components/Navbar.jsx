@@ -1,78 +1,53 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+﻿import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
 export default function Navbar() {
-  const { pathname }              = useLocation()
-  const { user, isAuthenticated, logout } = useAuth()
-  const navigate                  = useNavigate()
-  const [cartCount, setCartCount] = useState(0)
-
-  useEffect(() => {
-    try {
-      const cart = JSON.parse(localStorage.getItem('nexus_cart') || '[]')
-      setCartCount(cart.length)
-    } catch { setCartCount(0) }
-  }, [])
-
-  const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
-
-  const links = [
-    { to: '/',           label: 'Inicio' },
-    { to: '/productos',  label: 'Productos' },
-    { to: '/pc-builder', label: 'PC Builder' },
-    { to: '/comparador', label: 'Comparar' },
-  ]
+  const { user, logout, isAuthenticated } = useAuth()
+  const { totalItems } = useCart()
+  const isAdmin = user?.rol === 'ROLE_ADMIN'
 
   return (
-    <header>
-      <nav className="nav">
-        <div className="nav__inner">
-          <Link className="nav__logo" to="/">NEXUS<span>.</span></Link>
+    <header className="nav">
+      <div className="nav__inner">
+        <Link to="/" className="nav__logo">
+          NEXUS<span>.</span>
+        </Link>
 
-          <ul className="nav__links">
-            {links.map(l => (
-              <li key={l.to}>
-                <Link
-                  to={l.to}
-                  style={{ color: pathname === l.to ? 'var(--accent)' : undefined }}
-                >
-                  {l.label}
+        <nav className="nav__links" aria-label="Navegación principal">
+          <Link to="/">Inicio</Link>
+          <Link to="/productos">Productos</Link>
+          <Link to="/comparador">Comparador</Link>
+          <Link to="/pc-builder">PC Builder</Link>
+        </nav>
+
+        <div className="nav__actions">
+          <Link to="/carrito" className="btn btn-ghost">
+            Carrito ({totalItems})
+          </Link>
+
+          {isAuthenticated ? (
+            <>
+              {isAdmin && (
+                <Link to="/admin" className="btn btn-solid">
+                  Dashboard
                 </Link>
-              </li>
-            ))}
-          </ul>
-
-          <div className="nav__actions">
-            {isAuthenticated ? (
-              <>
-                <span style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '.72rem',
-                  letterSpacing: '2px', textTransform: 'uppercase',
-                  color: 'var(--accent)'
-                }}>
-                  {user?.nombre}
-                </span>
-                <button
-                  className="btn-ghost"
-                  onClick={handleLogout}
-                  style={{cursor:'pointer', background:'none'}}
-                >
-                  Cerrar sesión
-                </button>
-              </>
-            ) : (
-              <>
-                <Link className="btn-ghost" to="/login">Ingresar</Link>
-                <Link className="btn-solid" to="/register">Crear cuenta</Link>
-              </>
-            )}
-          </div>
+              )}
+              <span className="btn btn-ghost" style={{ pointerEvents: 'none' }}>
+                {user?.nombre || user?.email || 'Usuario'}
+              </span>
+              <button className="btn btn-solid" onClick={logout}>
+                Salir
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-ghost">Ingresar</Link>
+              <Link to="/register" className="btn btn-solid">Registrar</Link>
+            </>
+          )}
         </div>
-      </nav>
+      </div>
     </header>
   )
 }

@@ -1,7 +1,11 @@
-// src/services/celularService.js
-import { CELULARES } from '../data/celulares'
+// =============================================
+// NEXUS — CELULAR SERVICE
+// USE_MOCK = true  → mockCelulares.js
+// USE_MOCK = false → Spring Boot
+// =============================================
+import { CELULARES } from '../data/mockCelulares'  // ← corregido
 
-const USE_MOCK = true
+const USE_MOCK = false
 const API_BASE = 'http://localhost:8080/api'
 
 export async function getCelulares() {

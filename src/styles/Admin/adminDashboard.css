@@ -1,0 +1,114 @@
+/* =============================================
+   NEXUS — ADMIN / Dashboard
+   Stats, gráficas, tablas resumen
+   ============================================= */
+
+/* ── STATS GRID ── */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.stats-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  position: relative; overflow: hidden;
+  transition: background .2s;
+}
+.stats-card:hover { background: var(--bg-elevated); }
+.stats-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent); opacity: 0; transition: opacity .2s;
+}
+.stats-card:hover::before { opacity: 1; }
+
+.stats-card__label {
+  font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: .75rem;
+}
+.stats-card__value {
+  font-family: var(--font-display); font-size: 2.2rem;
+  font-weight: 900; letter-spacing: 1px; line-height: 1;
+  color: var(--text-primary);
+}
+.stats-card__value.accent { color: var(--accent); }
+.stats-card__sub {
+  font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: 1px; color: var(--text-muted);
+  margin-top: .5rem;
+}
+.stats-card__icon {
+  position: absolute; bottom: 1rem; right: 1rem;
+  opacity: .06; font-size: 3.5rem; line-height: 1;
+  user-select: none;
+}
+
+/* ── SECCIÓN TÍTULO ── */
+.admin-section-title {
+  font-family: var(--font-display); font-size: .9rem;
+  font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 1rem; padding-bottom: .6rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.admin-section-title a,
+.admin-section-title button {
+  font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent); background: none; border: none;
+  cursor: pointer; text-decoration: none;
+  transition: opacity .2s;
+}
+.admin-section-title a:hover,
+.admin-section-title button:hover { opacity: .7; }
+
+/* ── TABLA RESUMEN ── */
+.admin-table {
+  width: 100%; border-collapse: collapse;
+  border: 1px solid var(--border);
+}
+.admin-table th {
+  background: var(--bg-elevated);
+  font-family: var(--font-mono); font-size: .6rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); padding: .75rem 1rem;
+  text-align: left; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.admin-table td {
+  padding: .75rem 1rem; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: .72rem;
+  color: var(--text-secondary); background: var(--bg-card);
+  transition: background .15s;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: var(--bg-elevated); }
+.admin-table td.accent { color: var(--accent); font-weight: 700; }
+.admin-table td.muted  { color: var(--text-muted); }
+
+/* ── BADGE ESTADO ── */
+.admin-badge {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: .58rem;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 2px; font-weight: 700;
+}
+.admin-badge--success { background: rgba(45,255,160,.1); color: var(--success); border: 1px solid rgba(45,255,160,.2); }
+.admin-badge--warning { background: rgba(255,179,64,.1); color: var(--warning); border: 1px solid rgba(255,179,64,.2); }
+.admin-badge--danger  { background: rgba(255,59,92,.1);  color: var(--danger);  border: 1px solid rgba(255,59,92,.2); }
+.admin-badge--muted   { background: var(--bg-elevated);  color: var(--text-muted); border: 1px solid var(--border); }
+
+/* ── GRID DOS COLUMNAS ── */
+.admin-two-cols {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 2rem; margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .admin-two-cols { grid-template-columns: 1fr; }
+  .admin-stats-grid { grid-template-columns: 1fr 1fr; }
+}

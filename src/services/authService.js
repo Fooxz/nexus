@@ -1,60 +1,103 @@
-// src/services/authService.js
-// Responsabilidad única: comunicación con los endpoints de autenticación.
-// USE_MOCK = true mientras el back no esté listo
-// USE_MOCK = false cuando conectes Spring Boot
+// =============================================
+// NEXUS — AUTH SERVICE
+// USE_MOCK = true  → localStorage (sin backend)
+// USE_MOCK = false → Spring Boot
+// =============================================
 
-const USE_MOCK = false  // ← ya tenemos el backend listo
+const USE_MOCK = true
 const API_BASE = 'http://localhost:8080/api'
 
-export async function register(nombre, email, password) {
+const KEY_TOKEN = 'nexus_token'
+const KEY_USER  = 'nexus_user'
+const KEY_USERS = 'nexus_users'
+
+// Usuario admin por defecto — solo en mock
+const DEFAULT_ADMIN = {
+  id:       'admin-001',
+  nombre:   'Administrador',
+  email:    'admin@nexus.com',
+  password: 'admin123',
+  rol:      'ROLE_ADMIN',
+}
+
+function getStoredUsers() {
+  try {
+    const users = JSON.parse(localStorage.getItem(KEY_USERS) || '[]')
+    // Inyecta el admin si no existe aún
+    if (!users.find(u => u.id === DEFAULT_ADMIN.id)) {
+      const withAdmin = [DEFAULT_ADMIN, ...users]
+      localStorage.setItem(KEY_USERS, JSON.stringify(withAdmin))
+      return withAdmin
+    }
+    return users
+  } catch {
+    return [DEFAULT_ADMIN]
+  }
+}
+
+export async function register({ nombre, email, password }) {
   if (USE_MOCK) {
-    return { token: 'mock-token', nombre, email, rol: 'ROLE_USER' }
+    const users = getStoredUsers()
+    if (users.find(u => u.email === email))
+      throw new Error('El correo ya está registrado.')
+    const user = { id: `user-${Date.now()}`, nombre, email, password, rol: 'ROLE_USER' }
+    localStorage.setItem(KEY_USERS, JSON.stringify([...users, user]))
+    const session = { id: user.id, nombre, email, rol: user.rol }
+    localStorage.setItem(KEY_TOKEN, 'mock-token-' + user.id)
+    localStorage.setItem(KEY_USER,  JSON.stringify(session))
+    return { token: 'mock-token-' + user.id, user: session }
   }
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nombre, email, password })
+    body: JSON.stringify({ nombre, email, password }),
   })
-  if (!res.ok) {
-    const error = await res.text()
-    throw new Error(error || 'Error al registrarse')
-  }
-  return res.json()
+  if (!res.ok) throw new Error(await res.text() || 'Error al registrarse')
+  const data = await res.json()
+  localStorage.setItem(KEY_TOKEN, data.token)
+  localStorage.setItem(KEY_USER,  JSON.stringify(data.user))
+  return data
 }
- 
-export async function login(email, password) {
+
+export async function login(credentials, passwordArg) {
+  const normalized = (credentials && typeof credentials === 'object' && !Array.isArray(credentials))
+    ? credentials
+    : { email: credentials, password: passwordArg }
+
+  const { email, password } = normalized
+
   if (USE_MOCK) {
-    return { token: 'mock-token', nombre: 'Eric', email, rol: 'ROLE_USER' }
+    const users = getStoredUsers()
+    const user  = users.find(u => u.email === email && u.password === password)
+    if (!user) throw new Error('Correo o contraseña incorrectos.')
+    const session = { id: user.id, nombre: user.nombre, email, rol: user.rol }
+    localStorage.setItem(KEY_TOKEN, 'mock-token-' + user.id)
+    localStorage.setItem(KEY_USER,  JSON.stringify(session))
+    return { token: 'mock-token-' + user.id, user: session }
   }
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   })
-  if (!res.ok) {
-    const error = await res.text()
-    throw new Error(error || 'Credenciales incorrectas')
-  }
-  return res.json()
+  if (!res.ok) throw new Error(await res.text() || 'Credenciales incorrectas')
+  const data = await res.json()
+  localStorage.setItem(KEY_TOKEN, data.token)
+  localStorage.setItem(KEY_USER,  JSON.stringify(data.user))
+  return data
 }
 
 export function logout() {
-  localStorage.removeItem('nexus_token')
-  localStorage.removeItem('nexus_user')
+  localStorage.removeItem(KEY_TOKEN)
+  localStorage.removeItem(KEY_USER)
 }
 
-export function getToken() {
-  return localStorage.getItem('nexus_token')
-}
+export function getToken()  { return localStorage.getItem(KEY_TOKEN) }
 
 export function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem('nexus_user'))
-  } catch {
-    return null
-  }
+  try { return JSON.parse(localStorage.getItem(KEY_USER)) }
+  catch { return null }
 }
 
-export function isAuthenticated() {
-  return !!getToken()
-}
+export function getCurrentUser() { return getUser() }
+export function isAuthenticated() { return !!getToken() }

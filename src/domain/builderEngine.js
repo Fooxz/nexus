@@ -72,6 +72,11 @@ export function setCaseId(build, caseId) {
   return { ...build, caseId }
 }
 
+export function selectCase(build, caseProduct) {
+  const withComponent = setComponent(build, 'case', caseProduct.id)
+  return setCaseId(withComponent, caseProduct.caseConfigId ?? 'mid-tower')
+}
+
 export function validateStructure(build) {
   const errors = []
   if (!build.version)    errors.push('Falta version')

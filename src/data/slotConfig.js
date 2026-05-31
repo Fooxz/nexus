@@ -1,9 +1,5 @@
 // =============================================
 // NEXUS — SLOT CONFIG
-// Responsabilidad única: configuración del
-// PC Builder — qué slots existen y qué presets
-// hay disponibles. No sabe de datos de productos
-// ni de lógica de compatibilidad.
 // =============================================
 
 export const SLOT_CONFIG = [
@@ -14,26 +10,27 @@ export const SLOT_CONFIG = [
   { id: "storage",     label: "Almacenamiento",  icon: "💿", required: true  },
   { id: "psu",         label: "Fuente de Poder", icon: "🔌", required: true  },
   { id: "case",        label: "Gabinete",        icon: "🖥️", required: false },
-  { id: "cooling",     label: "Refrigeración",   icon: "❄️", required: false },
+  { id: "cooling",     label: "Refrigeración",   icon: "❄️", required: true  },
 ]
 
-// IDs de productos — cuando venga la API serán IDs reales de la BD
 export const PRESETS = {
   basico: {
-    cpu: "cpu-3", motherboard: "mb-1", ram: "ram-1",
-    gpu: "gpu-1", storage: "sto-2",   psu: "psu-1",
+    cpu: "cpu-6", motherboard: "mb-1", ram: "ram-1",
+    gpu: "gpu-1", storage: "sto-1", psu: "psu-1",
+    case: "case-1", cooling: "cool-1",
   },
   gamer: {
-    cpu: "cpu-2", motherboard: "mb-4", ram: "ram-2",
-    gpu: "gpu-2", storage: "sto-4",   psu: "psu-3",
+    cpu: "cpu-2", motherboard: "mb-2", ram: "ram-2",
+    gpu: "gpu-3", storage: "sto-4", psu: "psu-3",
+    case: "case-gamer", cooling: "cool-2",
   },
   pro: {
-    cpu: "cpu-5", motherboard: "mb-3", ram: "ram-4",
-    gpu: "gpu-4", storage: "sto-4",   psu: "psu-4",
+    cpu: "cpu-4", motherboard: "mb-3", ram: "ram-2",
+    gpu: "gpu-4", storage: "sto-4", psu: "psu-4",
+    case: "case-pro", cooling: "cool-3",
   },
 }
 
-// Metadata visual de los presets para la UI
 export const PRESETS_META = [
   { key: 'basico', label: '💻 Básico', price: '~$700'   },
   { key: 'gamer',  label: '🎮 Gamer',  price: '~$1,200' },

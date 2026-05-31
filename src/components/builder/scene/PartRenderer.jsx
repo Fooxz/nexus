@@ -13,11 +13,16 @@ const GLB_PATHS = {
   'ram-ddr4':        '/modelos/ram/ram-ddr4.glb',
   'ram-kingston':    '/modelos/ram/ram-kingston.glb',
   'motherboard':     '/modelos/motherboards/motherboard.glb',
-  
+  'motherboard-b550f': '/modelos/motherboards/motherboardb-550-f.glb',
+  'motherboard-b660m': '/modelos/motherboards/motherBoardB660M.glb',
   'psu3':            '/modelos/psu/psu3.glb',
   'psu4':            '/modelos/psu/psu4.glb',
   'cooler':          '/modelos/cooling/cooler.glb',
+  'cooler-amd':      '/modelos/cooling/amdCooler.glb',
+  'fan':             '/modelos/cooling/fan.glb',
   'storage-samsung': '/modelos/storage/storage-samsung.glb',
+  'case-gamer':      '/modelos/cases/caseGamer.glb',
+  'case-pro':        '/modelos/cases/casePro.glb',
 }
 
 // Aplica color dinámico al mesh objetivo dentro del GLB
