@@ -1,0 +1,7 @@
+/* =============================================
+   NEXUS — ADMIN / Entry point
+   ============================================= */
+
+@import './adminLayout.css';
+@import './adminDashboard.css';
+@import './adminProductos.css';

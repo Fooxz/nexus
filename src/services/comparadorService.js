@@ -132,57 +132,58 @@ function extraerMetricas(producto) {
 }
 
 // ── Calcular score de cada eje del radar (0-100) ────────────
-// Normaliza contra los dos productos para que siempre haya contraste.
+// Normaliza RELATIVAMENTE entre los dos productos comparados.
 export function calcularScoresRadar(prodA, prodB) {
   const mA = extraerMetricas(prodA)
   const mB = extraerMetricas(prodB)
 
-  function scoreEje(valA, valB) {
-    const min = Math.min(valA, valB)
+  // Función de normalización RELATIVA entre los dos productos
+  function normRelativa(valA, valB) {
     const max = Math.max(valA, valB)
+    const min = Math.min(valA, valB)
+    if (max === min) return { a: 50, b: 50 }
     return {
-      a: normalizar(valA, min, max),
-      b: normalizar(valB, min, max),
+      a: Math.round((valA / max) * 100),
+      b: Math.round((valB / max) * 100),
     }
   }
 
-  // Rendimiento — processor score
-  const rendimiento = scoreEje(mA.rendimiento, mB.rendimiento)
+  // Rendimiento (ya viene en escala 0-100, pero normalizamos entre ellos)
+  const rendimiento = normRelativa(mA.rendimiento, mB.rendimiento)
 
-  // Pantalla — combinación de resolución + tamaño
+  // Pantalla - combinación resolución + tamaño
   const pantallaA = mA.resolucion / 100000 + mA.pantallaTam * 10
   const pantallaB = mB.resolucion / 100000 + mB.pantallaTam * 10
-  const pantalla  = scoreEje(pantallaA, pantallaB)
+  const pantalla = normRelativa(pantallaA, pantallaB)
 
-  // Cámaras — principal pesada más que frontal
+  // Cámaras
   const camaraA = mA.camaraPrincipal * 0.7 + mA.camaraFrontal * 0.3
   const camaraB = mB.camaraPrincipal * 0.7 + mB.camaraFrontal * 0.3
-  const camaras  = scoreEje(camaraA, camaraB)
+  const camaras = normRelativa(camaraA, camaraB)
 
-  // Batería — mAh directo
-  const bateria = scoreEje(mA.bateria, mB.bateria)
+  // Batería - AHORA relativa, no fija
+  const bateria = normRelativa(mA.bateria, mB.bateria)
 
-  // Memoria — RAM (peso mayor) + storage
+  // Memoria
   const memoriaA = mA.ram * 8 + mA.storage
   const memoriaB = mB.ram * 8 + mB.storage
-  const memoria   = scoreEje(memoriaA, memoriaB)
+  const memoria = normRelativa(memoriaA, memoriaB)
 
-  // Valor — specs totales por peso en precio
-  // Un score alto = más specs por cada peso colombiano
-  const specsA = mA.rendimiento + mA.camaraPrincipal + mA.bateria / 50 + mA.ram * 5
-  const specsB = mB.rendimiento + mB.camaraPrincipal + mB.bateria / 50 + mB.ram * 5
-  const valorA = specsA / (mA.precio / 100000)
-  const valorB = specsB / (mB.precio / 100000)
-  const valor   = scoreEje(valorA, valorB)
+  // Valor - relativo al precio
+  const mejorPrecio = Math.min(mA.precio, mB.precio)
+  const valorA = mejorPrecio === mA.precio ? 100 : Math.round((mejorPrecio / mA.precio) * 100)
+  const valorB = mejorPrecio === mB.precio ? 100 : Math.round((mejorPrecio / mB.precio) * 100)
+  
+  // Bonus por descuento
+  const valorFinalA = Math.min(valorA + (prodA.descuento || 0), 100)
+  const valorFinalB = Math.min(valorB + (prodB.descuento || 0), 100)
 
-  return {
-    rendimiento,
-    pantalla,
-    camaras,
-    bateria,
-    memoria,
-    valor,
+  const valor = {
+    a: valorFinalA,
+    b: valorFinalB,
   }
+
+  return { rendimiento, pantalla, camaras, bateria, memoria, valor }
 }
 
 // ── Calcular ventajas de A sobre B (y viceversa) ────────────
@@ -238,7 +239,7 @@ export function calcularVentajas(prodA, prodB) {
       campo: 'Pantalla',
       a: mA.pantallaTam, b: mB.pantallaTam,
       labelA: prodA.specs.pantalla, labelB: prodB.specs.pantalla,
-      umbral: 3,
+      umbral: 2,
     },
     {
       campo: 'Precio',

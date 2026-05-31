@@ -39,7 +39,7 @@ export default function BuilderSlots({ build, onOpen, onRemove }) {
                   </div>
                   {filled && (
                     <>
-                      <span className="slot-price">${part.precio}</span>
+                      <span className="slot-price">${part.precio.toLocaleString('es-CO')}</span>
                       <button
                         className="slot-remove"
                         onClick={e => { e.stopPropagation(); onRemove('ram', slotNumber) }}
@@ -78,7 +78,7 @@ export default function BuilderSlots({ build, onOpen, onRemove }) {
               </div>
               {filled && (
                 <>
-                  <span className="slot-price">${part.precio}</span>
+                  <span className="slot-price">${part.precio.toLocaleString('es-CO')}</span>
                   <button
                     className="slot-remove"
                     onClick={e => { e.stopPropagation(); onRemove(slot.id) }}

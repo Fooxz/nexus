@@ -39,7 +39,7 @@ export default function BuilderModal({ open, activeSlot, parts, query, onSearch,
                   {part.certificacion && ` · ${part.certificacion}`}
                 </div>
               </div>
-              <div className="part-option-price">${part.precio}</div>
+              <div className="part-option-price">${part.precio.toLocaleString('es-CO')}</div>
             </div>
           ))}
           {parts.length === 0 && (

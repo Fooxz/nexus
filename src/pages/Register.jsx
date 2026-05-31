@@ -26,7 +26,11 @@ export default function Register() {
 
     setLoading(true)
     try {
-      const response = await registerService(nombre, email, password)
+      const response = await registerService({
+  nombre,
+  email,
+  password
+})
       login(response)
       navigate('/')
     } catch (err) {

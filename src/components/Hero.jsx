@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const CATEGORIES = ['Todo','Celulares','Laptops','Televisores','Drones','Motos eléctricas','Accesorios','Cargadores']
 const IMAGES = ['/imagenes/imagen1.png','/imagenes/imagen2.png','/imagenes/imagen3.png','/imagenes/imagen4.png','/imagenes/imagen5.png']
 const DURATION = 3500
 
 export default function Hero() {
+  const navigate = useNavigate()
   const [activeCategory, setActiveCategory] = useState('Todo')
   const [current, setCurrent] = useState(0)
   const timerRef = useRef(null)
@@ -25,6 +26,15 @@ export default function Hero() {
   const startTimer = () => {
     clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setCurrent(c => (c + 1) % IMAGES.length), DURATION)
+  }
+
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(cat)
+    if (cat === 'Todo') {
+      navigate('/productos')
+      return
+    }
+    navigate(`/productos?cat=${encodeURIComponent(cat)}`)
   }
 
   useEffect(() => {
@@ -94,13 +104,14 @@ export default function Hero() {
           {/* CATEGORY PILLS */}
           <nav className="hero__cats" id="categorias" aria-label="Categorías">
             {CATEGORIES.map(cat => (
-              <span
+              <button
                 key={cat}
+                type="button"
                 className={`hero__cat${activeCategory === cat ? ' active' : ''}`}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryClick(cat)}
               >
                 {cat}
-              </span>
+              </button>
             ))}
           </nav>
 
