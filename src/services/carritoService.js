@@ -1,47 +1,58 @@
 // =============================================
-// NEXUS — carritoService
-// USE_MOCK = true  → solo retorna éxito simulado
-// USE_MOCK = false → POST a Spring Boot
+// NEXUS — CARRITO SERVICE
+// Confirma pedidos contra Spring Boot.
+// POST /api/pedidos  (requiere JWT)
 // =============================================
+import API_BASE_URL from '../config/api'
+import { getToken } from './authService'
 
-const USE_MOCK = true
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = `${API_BASE_URL}`
 
 /**
- * Envía el pedido al backend.
- * @param {Array}  items  — ítems del carrito [{ id, nombre, precio, cantidad }]
- * @param {string} token  — JWT del usuario autenticado
- * @returns {Promise<{ pedidoId: string, total: number, estado: string }>}
+ * Confirma el pedido en el backend.
+ *
+ * @param {Array}  items           — ítems del carrito
+ *   [{ id, productoId, nombre, precio, cantidad }]
+ * @param {string} token           — JWT del usuario autenticado
+ * @param {string} nombreComprador — nombre ingresado en el checkout
+ *
+ * @returns {Promise<{ pedidoId, total, estado, createdAt }>}
  */
-export async function confirmarPedido(items, token) {
-  if (USE_MOCK) {
-    await new Promise(r => setTimeout(r, 900))
-    return {
-      pedidoId: `PED-${Date.now()}`,
-      total:    items.reduce((acc, i) => acc + i.precio * i.cantidad, 0),
-      estado:   'CONFIRMADO',
-    }
+export async function confirmarPedido(items, token, nombreComprador = '') {
+  const jwt = token ?? getToken()
+  if (!jwt) {
+    throw new Error('Usuario no autenticado. Por favor inicia sesión para completar la compra.')
+  }
+
+  const body = {
+    nombreComprador,
+    items: items.map(i => ({
+      productoId:     i.productoId ?? i.id,
+      cantidad:       i.cantidad ?? 1,
+      precioUnitario: i.precio,
+    })),
   }
 
   const res = await fetch(`${API_BASE}/pedidos`, {
     method: 'POST',
     headers: {
       'Content-Type':  'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization:   `Bearer ${jwt}`,
     },
-    body: JSON.stringify({
-      items: items.map(i => ({
-        productoId: i.id,
-        cantidad:   i.cantidad,
-        precioUnit: i.precio,
-      })),
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message ?? `Error ${res.status} al confirmar pedido`)
+    const err = await res.text().catch(() => '')
+    throw new Error(err || `Error ${res.status} al confirmar pedido`)
   }
 
-  return res.json()
+  const data = await res.json()
+
+  // El back devuelve { pedidoId, total, estado, createdAt }
+  return {
+    pedidoId: data.pedidoId,
+    total:    data.total,
+    estado:   data.estado ?? 'CONFIRMADO',
+  }
 }

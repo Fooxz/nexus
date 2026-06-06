@@ -1,59 +1,66 @@
 // =============================================
 // NEXUS — COMPARADOR SERVICE
 // Responsabilidad única: lógica pura de comparación.
-// Recibe dos productos, devuelve scores, ventajas y ejes del radar.
-// Sin React, sin UI, sin efectos secundarios.
+// Scores absolutos basados en topes del mercado actual.
 // =============================================
 
 // ── Tabla de scores de procesador (mayor = mejor) ──────────
 const PROCESSOR_SCORES = {
   // Apple
-  'apple a13 bionic': 95,
-  'apple a12 bionic': 88,
-  'apple a11 bionic': 82,
-  'apple a10 fusion': 72,
-  'apple a9':         62,
-  'apple a8':         50,
+  'apple a19 pro':      100,
+  'apple a18':          98,
+  'apple a17 pro':      99,
+  'apple a16 bionic':   97,
+  'apple a13 bionic':   95,
+  'apple a12 bionic':   88,
+  'apple a11 bionic':   82,
+  'apple a10 fusion':   72,
+  'apple a9':           62,
+  'apple a8':           50,
   // Qualcomm
-  'snapdragon 865':   94,
-  'snapdragon 855+':  90,
-  'snapdragon 855':   88,
-  'snapdragon 845':   80,
-  'snapdragon 835':   74,
-  'snapdragon 821':   68,
-  'snapdragon 820':   66,
-  'snapdragon 730g':  72,
-  'snapdragon 730':   70,
-  'snapdragon 720g':  68,
-  'snapdragon 675':   62,
-  'snapdragon 670':   60,
-  'snapdragon 665':   58,
-  'snapdragon 632':   52,
-  'snapdragon 630':   50,
-  'snapdragon 625':   48,
-  'snapdragon 450':   38,
-  'snapdragon 439':   35,
-  'snapdragon 430':   32,
+  'snapdragon 8 elite': 99,
+  'snapdragon 8 gen 3': 98,
+  'snapdragon 865':     94,
+  'snapdragon 855+':    90,
+  'snapdragon 855':     88,
+  'snapdragon 845':     80,
+  'snapdragon 835':     74,
+  'snapdragon 821':     68,
+  'snapdragon 820':     66,
+  'snapdragon 730g':    72,
+  'snapdragon 730':     70,
+  'snapdragon 720g':    68,
+  'snapdragon 675':     62,
+  'snapdragon 670':     60,
+  'snapdragon 665':     58,
+  'snapdragon 632':     52,
+  'snapdragon 630':     50,
+  'snapdragon 625':     48,
+  'snapdragon 450':     38,
+  'snapdragon 439':     35,
+  'snapdragon 430':     32,
+  // Google
+  'google tensor g5':   96,
   // Kirin
-  'kirin 990 5g':     92,
-  'kirin 980':        82,
-  'kirin 710f':       58,
-  'kirin 710':        56,
+  'kirin 990 5g':       92,
+  'kirin 980':          82,
+  'kirin 710f':         58,
+  'kirin 710':          56,
   // Exynos
-  'exynos 990':       91,
-  'exynos 9825':      86,
-  'exynos 9820':      84,
-  'exynos 9810':      78,
-  'exynos 8895':      74,
-  'exynos 9611':      62,
-  'exynos 9609':      60,
+  'exynos 990':         91,
+  'exynos 9825':        86,
+  'exynos 9820':        84,
+  'exynos 9810':        78,
+  'exynos 8895':        74,
+  'exynos 9611':        62,
+  'exynos 9609':        60,
   // MediaTek
-  'helio g90t':       70,
-  'helio g70':        58,
-  'helio p70':        54,
-  'helio p35':        42,
-  'helio p22':        36,
-  'helio a22':        30,
+  'helio g90t':         70,
+  'helio g70':          58,
+  'helio p70':          54,
+  'helio p35':          42,
+  'helio p22':          36,
+  'helio a22':          30,
 }
 
 function getProcessorScore(procesador) {
@@ -65,12 +72,56 @@ function getProcessorScore(procesador) {
   return 40
 }
 
-// ── Parsear megapíxeles del string de cámara ────────────────
-function parseMegapixels(camaraStr) {
-  if (!camaraStr) return 0
+// ── Calificadores absolutos por eje ────────────────────────
+
+function calificarPantallaAbsoluta(resStr) {
+  if (!resStr) return 40
+  const parts = resStr.toLowerCase().split('x').map(Number)
+  if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return 50
+  const pixelesTotales = parts[0] * parts[1]
+  const MAX_PIXELES_MERCADO = 4500000
+  let score = Math.round((pixelesTotales / MAX_PIXELES_MERCADO) * 100)
+  return Math.min(Math.max(score, 10), 100)
+}
+
+function calificarBateriaAbsoluta(bateriaStr) {
+  if (!bateriaStr) return 40
+  const match = bateriaStr.match(/(\d+)/)
+  const mah = match ? parseInt(match[1], 10) : 0
+  if (mah === 0) return 40
+  const TOP_BATERIA = 5000
+  let score = Math.round((mah / TOP_BATERIA) * 100)
+  return Math.min(Math.max(score, 15), 100)
+}
+
+function calificarCamaraAbsoluta(camaraStr, productoMarca) {
+  if (!camaraStr) return 30
   const nums = camaraStr.match(/\d+/g)
-  if (!nums) return 0
-  return Math.max(...nums.map(Number))
+  if (!nums) return 40
+  const mpMaximos = Math.max(...nums.map(Number))
+  let scoreBase = 40
+  if (mpMaximos >= 200)      scoreBase = 90
+  else if (mpMaximos >= 108) scoreBase = 85
+  else if (mpMaximos >= 50)  scoreBase = 78
+  else if (mpMaximos >= 48)  scoreBase = 75
+  else if (mpMaximos >= 12)  scoreBase = 55
+  const marca = (productoMarca ?? '').toLowerCase()
+  if (marca.includes('apple') || marca.includes('samsung')) scoreBase += 8
+  const texto = camaraStr.toLowerCase()
+  if (texto.includes('triple') || texto.includes('cuádruple') || texto.includes('quad')) scoreBase += 10
+  else if (texto.includes('dual')) scoreBase += 4
+  return Math.min(scoreBase, 100)
+}
+
+function calificarMemoriaAbsoluta(ramStr, storageStr) {
+  const matchRam = ramStr ? ramStr.match(/(\d+)/) : null
+  const ram = matchRam ? parseInt(matchRam[1], 10) : 4
+  const matchStorage = storageStr ? storageStr.match(/(\d+)/) : null
+  const storage = matchStorage ? parseInt(matchStorage[1], 10) : 64
+  const scoreRam     = (ram / 16) * 100
+  const scoreStorage = (storage / 512) * 100
+  let scoreTotal = Math.round((scoreRam * 0.6) + (scoreStorage * 0.4))
+  return Math.min(Math.max(scoreTotal, 20), 100)
 }
 
 // ── Parsear mAh ────────────────────────────────────────────
@@ -94,12 +145,12 @@ function parseStorage(storageStr) {
   return match ? parseInt(match[1]) : 0
 }
 
-// ── Parsear resolución total en píxeles ─────────────────────
-function parseResolucion(resStr) {
-  if (!resStr) return 0
-  const parts = resStr.split('x').map(Number)
-  if (parts.length < 2) return 0
-  return parts[0] * parts[1]
+// ── Parsear megapíxeles del string de cámara ────────────────
+function parseMegapixels(camaraStr) {
+  if (!camaraStr) return 0
+  const nums = camaraStr.match(/\d+/g)
+  if (!nums) return 0
+  return Math.max(...nums.map(Number))
 }
 
 // ── Parsear tamaño de pantalla ──────────────────────────────
@@ -109,88 +160,76 @@ function parsePantalla(pantallaStr) {
   return match ? parseFloat(match[1]) : 0
 }
 
-// ── Normalizar valor entre 0-100 dado un rango ─────────────
-function normalizar(valor, min, max) {
-  if (max === min) return 50
-  return Math.round(((valor - min) / (max - min)) * 100)
-}
-
 // ── Extraer métricas crudas de un producto ──────────────────
 function extraerMetricas(producto) {
-  const s = producto.specs
+  const s = producto.specs ?? producto
   return {
-    rendimiento:    getProcessorScore(s.procesador),
-    resolucion:     parseResolucion(s.resolucion),
-    pantallaTam:    parsePantalla(s.pantalla),
+    rendimiento:     getProcessorScore(s.procesador),
     camaraPrincipal: parseMegapixels(s.camaraPrincipal),
-    camaraFrontal:  parseMegapixels(s.camaraFrontal),
-    bateria:        parseBateria(s.bateria),
-    ram:            parseRam(s.ram),
-    storage:        parseStorage(s.almacenamiento),
-    precio:         producto.precio,
+    camaraFrontal:   parseMegapixels(s.camaraFrontal),
+    bateria:         parseBateria(s.bateria),
+    ram:             parseRam(s.ram),
+    storage:         parseStorage(s.almacenamiento),
+    pantallaTam:     parsePantalla(s.pantalla),
+    precio:          producto.precio ?? producto.producto?.precio,
   }
 }
 
-// ── Calcular score de cada eje del radar (0-100) ────────────
-// Normaliza RELATIVAMENTE entre los dos productos comparados.
+// ── Calcular scores del radar con valores absolutos ─────────
 export function calcularScoresRadar(prodA, prodB) {
+  const sA = prodA.specs ?? prodA
+  const sB = prodB.specs ?? prodB
   const mA = extraerMetricas(prodA)
   const mB = extraerMetricas(prodB)
 
-  // Función de normalización RELATIVA entre los dos productos
-  function normRelativa(valA, valB) {
-    const max = Math.max(valA, valB)
-    const min = Math.min(valA, valB)
-    if (max === min) return { a: 50, b: 50 }
-    return {
-      a: Math.round((valA / max) * 100),
-      b: Math.round((valB / max) * 100),
-    }
+  // 1. Rendimiento — directo de PROCESSOR_SCORES (escala 30-100)
+  const rendimiento = {
+    a: getProcessorScore(sA.procesador),
+    b: getProcessorScore(sB.procesador),
   }
 
-  // Rendimiento (ya viene en escala 0-100, pero normalizamos entre ellos)
-  const rendimiento = normRelativa(mA.rendimiento, mB.rendimiento)
+  // 2. Pantalla — basado en resolución total vs tope mercado
+  const pantalla = {
+    a: calificarPantallaAbsoluta(sA.resolucion),
+    b: calificarPantallaAbsoluta(sB.resolucion),
+  }
 
-  // Pantalla - combinación resolución + tamaño
-  const pantallaA = mA.resolucion / 100000 + mA.pantallaTam * 10
-  const pantallaB = mB.resolucion / 100000 + mB.pantallaTam * 10
-  const pantalla = normRelativa(pantallaA, pantallaB)
+  // 3. Cámaras — escala con bonus por marca y versatilidad
+  const camaras = {
+    a: calificarCamaraAbsoluta(sA.camaraPrincipal, prodA.marca),
+    b: calificarCamaraAbsoluta(sB.camaraPrincipal, prodB.marca),
+  }
 
-  // Cámaras
-  const camaraA = mA.camaraPrincipal * 0.7 + mA.camaraFrontal * 0.3
-  const camaraB = mB.camaraPrincipal * 0.7 + mB.camaraFrontal * 0.3
-  const camaras = normRelativa(camaraA, camaraB)
+  // 4. Batería — mAh vs tope 5000 mAh
+  const bateria = {
+    a: calificarBateriaAbsoluta(sA.bateria, mA.rendimiento),
+    b: calificarBateriaAbsoluta(sB.bateria, mB.rendimiento),
+  }
 
-  // Batería - AHORA relativa, no fija
-  const bateria = normRelativa(mA.bateria, mB.bateria)
+  // 5. Memoria — RAM + almacenamiento ponderados
+  const memoria = {
+    a: calificarMemoriaAbsoluta(sA.ram, sA.almacenamiento),
+    b: calificarMemoriaAbsoluta(sB.ram, sB.almacenamiento),
+  }
 
-  // Memoria
-  const memoriaA = mA.ram * 8 + mA.storage
-  const memoriaB = mB.ram * 8 + mB.storage
-  const memoria = normRelativa(memoriaA, memoriaB)
-
-  // Valor - relativo al precio
-  const mejorPrecio = Math.min(mA.precio, mB.precio)
-  const valorA = mejorPrecio === mA.precio ? 100 : Math.round((mejorPrecio / mA.precio) * 100)
-  const valorB = mejorPrecio === mB.precio ? 100 : Math.round((mejorPrecio / mB.precio) * 100)
-  
-  // Bonus por descuento
-  const valorFinalA = Math.min(valorA + (prodA.descuento || 0), 100)
-  const valorFinalB = Math.min(valorB + (prodB.descuento || 0), 100)
-
+  // 6. Valor — el producto más caro obtiene mayor score
+  const peorPrecio = Math.max(mA.precio, mB.precio)
+  const valorA = peorPrecio === mA.precio ? 100 : Math.round((mA.precio / peorPrecio) * 100)
+  const valorB = peorPrecio === mB.precio ? 100 : Math.round((mB.precio / peorPrecio) * 100)
   const valor = {
-    a: valorFinalA,
-    b: valorFinalB,
+    a: Math.min(valorA, 100),
+    b: Math.min(valorB, 100),
   }
 
   return { rendimiento, pantalla, camaras, bateria, memoria, valor }
 }
 
-// ── Calcular ventajas de A sobre B (y viceversa) ────────────
-// Retorna array de { campo, labelA, labelB, pct, ganador: 'a'|'b' }
+// ── Calcular ventajas de A sobre B ─────────────────────────
 export function calcularVentajas(prodA, prodB) {
   const mA = extraerMetricas(prodA)
   const mB = extraerMetricas(prodB)
+  const sA = prodA.specs ?? prodA
+  const sB = prodB.specs ?? prodB
   const ventajas = []
 
   function pctDiff(a, b) {
@@ -208,44 +247,44 @@ export function calcularVentajas(prodA, prodB) {
     {
       campo: 'RAM',
       a: mA.ram, b: mB.ram,
-      labelA: prodA.specs.ram, labelB: prodB.specs.ram,
+      labelA: sA.ram, labelB: sB.ram,
       umbral: 0,
     },
     {
       campo: 'Cámara principal',
       a: mA.camaraPrincipal, b: mB.camaraPrincipal,
-      labelA: prodA.specs.camaraPrincipal, labelB: prodB.specs.camaraPrincipal,
+      labelA: sA.camaraPrincipal, labelB: sB.camaraPrincipal,
       umbral: 5,
     },
     {
       campo: 'Cámara frontal',
       a: mA.camaraFrontal, b: mB.camaraFrontal,
-      labelA: prodA.specs.camaraFrontal, labelB: prodB.specs.camaraFrontal,
+      labelA: sA.camaraFrontal, labelB: sB.camaraFrontal,
       umbral: 5,
     },
     {
       campo: 'Rendimiento del procesador',
       a: mA.rendimiento, b: mB.rendimiento,
-      labelA: prodA.specs.procesador, labelB: prodB.specs.procesador,
+      labelA: sA.procesador, labelB: sB.procesador,
       umbral: 5,
     },
     {
       campo: 'Almacenamiento',
       a: mA.storage, b: mB.storage,
-      labelA: prodA.specs.almacenamiento, labelB: prodB.specs.almacenamiento,
+      labelA: sA.almacenamiento, labelB: sB.almacenamiento,
       umbral: 0,
     },
     {
       campo: 'Pantalla',
       a: mA.pantallaTam, b: mB.pantallaTam,
-      labelA: prodA.specs.pantalla, labelB: prodB.specs.pantalla,
+      labelA: sA.pantalla, labelB: sB.pantalla,
       umbral: 2,
     },
     {
       campo: 'Precio',
-      a: mB.precio, b: mA.precio, // invertido: menor precio = ventaja
-      labelA: `$${mA.precio.toLocaleString('es-CO')}`,
-      labelB: `$${mB.precio.toLocaleString('es-CO')}`,
+      a: mB.precio, b: mA.precio,
+      labelA: `$${(mA.precio ?? 0).toLocaleString('es-CO')}`,
+      labelB: `$${(mB.precio ?? 0).toLocaleString('es-CO')}`,
       umbral: 3,
       invertido: true,
     },
@@ -255,25 +294,41 @@ export function calcularVentajas(prodA, prodB) {
     if (c.a === c.b) continue
     const diff = Math.abs(pctDiff(c.a, c.b))
     if (diff < c.umbral) continue
-
     const ganador = c.a > c.b ? 'a' : 'b'
     ventajas.push({
-      campo:   c.campo,
-      labelA:  c.labelA,
-      labelB:  c.labelB,
-      pct:     diff,
+      campo:     c.campo,
+      labelA:    c.labelA,
+      labelB:    c.labelB,
+      pct:       diff,
       ganador,
       invertido: c.invertido ?? false,
     })
   }
 
-  // Ordenar por diferencia porcentual descendente
   return ventajas.sort((a, b) => b.pct - a.pct)
 }
 
-// ── Score global (0-100) para mostrar debajo del radar ──────
-export function calcularScoreGlobal(producto, oponente) {
-  const scores = calcularScoresRadar(producto, oponente)
-  const ejes   = Object.values(scores).map(e => e.a)
-  return Math.round(ejes.reduce((s, v) => s + v, 0) / ejes.length)
+// ── Score global absoluto ponderado (0-100) ─────────────────
+export function calcularScoreAbsoluto(producto) {
+  const s = producto.specs ?? producto
+  const rendimiento = getProcessorScore(s.procesador)
+  const pantalla    = calificarPantallaAbsoluta(s.resolucion)
+  const camaras     = calificarCamaraAbsoluta(s.camaraPrincipal, producto.marca)
+  const bateria     = calificarBateriaAbsoluta(s.bateria, rendimiento)
+  const memoria     = calificarMemoriaAbsoluta(s.ram, s.almacenamiento)
+  const precio      = producto.precio ?? producto.producto?.precio ?? 0
+  const valor       = Math.min(100, Math.max(0, Math.round(((6000000 - precio) / 6000000) * 100)))
+
+  return Math.round(
+    rendimiento * 0.35 +
+    camaras     * 0.25 +
+    pantalla    * 0.10 +
+    bateria     * 0.10 +
+    memoria     * 0.10 +
+    valor       * 0.10
+  )
+}
+
+export function calcularScoreGlobal(producto) {
+  return calcularScoreAbsoluto(producto)
 }

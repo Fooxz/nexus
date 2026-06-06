@@ -153,22 +153,35 @@
   display: flex; flex-wrap: wrap; gap: .5rem;
   padding-bottom: 3rem;
 }
+
+/* Botón normal (sin seleccionar) */
 .hero__cat {
-  font-family: var(--font-mono); font-size: .68rem;
-  letter-spacing: 2px; text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   padding: .4rem 1rem;
   border: 1px solid var(--border);
-  color: var(--muted); border-radius: 1px;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 1px;
   cursor: pointer;
   transition: border-color .2s, color .2s, background .2s;
 }
-.hero__cat:hover,
+
+/* Botón activo/seleccionado - AZUL con letras NEGRAS */
 .hero__cat.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
+  border-color: #000000;
+  background: #2AA6F4;
+  color: #000000;
 }
 
+/* Botón hover - mismo estilo que activo */
+.hero__cat:hover {
+  border-color: #93c6ff;
+  background: #57a4fb;
+  color: #000000;
+}
 /* ── FEATURES ── */
 .features {
   border-top: 1px solid var(--border);

@@ -3,9 +3,10 @@
 // USE_MOCK = true  → localStorage (sin backend)
 // USE_MOCK = false → Spring Boot
 // =============================================
+import API_BASE_URL from '../config/api'
 
-const USE_MOCK = true
-const API_BASE = 'http://localhost:8080/api'
+const USE_MOCK = false
+const API_BASE = API_BASE_URL
 
 const KEY_TOKEN = 'nexus_token'
 const KEY_USER  = 'nexus_user'
@@ -54,9 +55,10 @@ export async function register({ nombre, email, password }) {
   })
   if (!res.ok) throw new Error(await res.text() || 'Error al registrarse')
   const data = await res.json()
+  const user = { nombre: data.nombre, email: data.email, rol: data.rol }
   localStorage.setItem(KEY_TOKEN, data.token)
-  localStorage.setItem(KEY_USER,  JSON.stringify(data.user))
-  return data
+  localStorage.setItem(KEY_USER,  JSON.stringify(user))
+  return { token: data.token, user }
 }
 
 export async function login(credentials, passwordArg) {
@@ -82,9 +84,10 @@ export async function login(credentials, passwordArg) {
   })
   if (!res.ok) throw new Error(await res.text() || 'Credenciales incorrectas')
   const data = await res.json()
+  const user = { nombre: data.nombre, email: data.email, rol: data.rol }
   localStorage.setItem(KEY_TOKEN, data.token)
-  localStorage.setItem(KEY_USER,  JSON.stringify(data.user))
-  return data
+  localStorage.setItem(KEY_USER,  JSON.stringify(user))
+  return { token: data.token, user }
 }
 
 export function logout() {

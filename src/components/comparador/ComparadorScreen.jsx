@@ -220,11 +220,11 @@ function SlotCard({ producto, color, lado, score, enCarrito, onElegir, onLimpiar
       </div>
 
       <div className="comp-slot-info">
-        <p className="comp-slot-marca" style={{ color }}>{producto.marca}</p>
-        <p className="comp-slot-modelo">{producto.modelo}</p>
+        <p className="comp-slot-marca" style={{ color }}>{producto.marca ?? producto.producto?.marca}</p>
+        <p className="comp-slot-modelo">{producto.modelo ?? producto.nombre}</p>
         <p className="comp-slot-storage">{producto.storage} · {producto.color}</p>
         <p className="comp-slot-precio">
-          ${producto.precio.toLocaleString('es-CO')}
+          ${(producto.precio ?? producto.producto?.precio ?? 0).toLocaleString('es-CO')}
           {producto.descuento > 0 && (
             <span className="comp-slot-desc"> -{producto.descuento}%</span>
           )}

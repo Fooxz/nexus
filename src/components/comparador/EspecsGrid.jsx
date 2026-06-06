@@ -21,8 +21,8 @@ const FILAS = [
 // Determina cuál valor es "mejor" para resaltarlo
 // Retorna 'a' | 'b' | null (si son iguales o no aplica)
 function ganadorFila(key, specA, specB) {
-  const a = specA[key]
-  const b = specB[key]
+  const a = (specA ?? {})[key]
+  const b = (specB ?? {})[key]
 
   if (a === b) return null
 
@@ -78,7 +78,7 @@ export default function EspecsGrid({ prodA, prodB, colorA, colorB }) {
 
       {/* Specs */}
       {FILAS.map(fila => {
-        const ganador = ganadorFila(fila.key, prodA.specs, prodB.specs)
+        const ganador = ganadorFila(fila.key, prodA.specs ?? prodA, prodB.specs ?? prodB)
         return (
           <div key={fila.key} className="specs-row">
             <div className="specs-col-label">{fila.label}</div>
@@ -86,13 +86,13 @@ export default function EspecsGrid({ prodA, prodB, colorA, colorB }) {
               className={`specs-col-a specs-val ${ganador === 'a' ? 'specs-winner' : ''}`}
               style={ganador === 'a' ? { color: colorA } : {}}
             >
-              {formatVal(prodA.specs[fila.key])}
+              {formatVal((prodA.specs ?? prodA)[fila.key])}
             </div>
             <div
               className={`specs-col-b specs-val ${ganador === 'b' ? 'specs-winner' : ''}`}
               style={ganador === 'b' ? { color: colorB } : {}}
             >
-              {formatVal(prodB.specs[fila.key])}
+              {formatVal((prodB.specs ?? prodB)[fila.key])}
             </div>
           </div>
         )

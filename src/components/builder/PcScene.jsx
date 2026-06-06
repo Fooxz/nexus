@@ -24,6 +24,22 @@ const CASE_MODELS = {
   'case-pro':   CaseProModel,
 }
 
+function resolveBoardGeometry(motherboard) {
+  if (!motherboard) return null
+  if (motherboard.id && BOARD_GEOMETRY[motherboard.id]) return BOARD_GEOMETRY[motherboard.id]
+
+  const name = (motherboard.nombre || '').toLowerCase()
+  if (name.includes('h510')) return BOARD_GEOMETRY['mb-1']
+  if (name.includes('b550')) return BOARD_GEOMETRY['mb-2']
+  if (name.includes('b660')) return BOARD_GEOMETRY['mb-3']
+
+  const socket = (motherboard.socket || '').toLowerCase()
+  if (socket === 'lga1200') return BOARD_GEOMETRY['mb-1']
+  if (socket === 'am4') return BOARD_GEOMETRY['mb-2']
+  if (socket === 'lga1700') return BOARD_GEOMETRY['mb-3']
+  return null
+}
+
 const isEmpty = (build) => !build?.cpu && !build?.gpu && !build?.ramSlots?.length
 
 function LoadingPart() {
@@ -41,7 +57,7 @@ export default function PcScene({ build = {}, caseId, selectedCase }) {
   const resolvedCase = caseId ?? selectedCase ?? DEFAULT_CASE
   const config       = CASE_CONFIGS[resolvedCase] ?? CASE_CONFIGS[DEFAULT_CASE]
   const ActiveCase   = CASE_MODELS[resolvedCase] ?? CaseModel
-  const boardGeo     = build.motherboard?.id ? BOARD_GEOMETRY[build.motherboard.id] : null
+  const boardGeo     = resolveBoardGeometry(build.motherboard)
 
   // Posición y rotación del chasis — campos opcionales, fallback a [0,0,0]
   const casePosition = config.position ?? [0, 0, 0]
@@ -238,7 +254,7 @@ export default function PcScene({ build = {}, caseId, selectedCase }) {
 
         {isEmpty(build) && (
           <div className="visual-empty">
-            <div className="visual-empty-icon">🖥️</div>
+            <div className="visual-empty-icon"></div>
             <div className="visual-empty-text">
               Selecciona componentes para ver el ensamblado 3D
             </div>

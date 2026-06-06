@@ -11,6 +11,7 @@ export default function ProductCard({
   onVerDetalle,
 }) {
   const { nombre, marca, precio, precioNormal, descuento, imagen, categoria, specs = {} } = producto
+  const agotado = (producto.stock ?? 0) === 0
   const [showCheckout, setShowCheckout] = useState(false)
 
   const specPills = Object.entries(specs)
@@ -19,7 +20,11 @@ export default function ProductCard({
 
   return (
     <>
-      <article className="prod-card">
+      <article
+        className="prod-card"
+        onClick={() => onVerDetalle && onVerDetalle(producto)}
+        style={{ cursor: onVerDetalle ? 'pointer' : 'default' }}
+      >
         {/* Imagen */}
         <div className="prod-card__img-wrap">
           <img
@@ -33,6 +38,11 @@ export default function ProductCard({
           {categoria && (
             <span className="prod-card__category">
               <span className="badge badge-muted">{categoria}</span>
+            </span>
+          )}
+          {agotado && (
+            <span className="prod-card__category" style={{ marginLeft: 'auto' }}>
+              <span className="badge badge-danger">Agotado</span>
             </span>
           )}
         </div>
@@ -68,7 +78,7 @@ export default function ProductCard({
             {onVerDetalle && (
               <button
                 className="prod-card__btn prod-card__btn--ghost"
-                onClick={() => onVerDetalle(producto)}
+                onClick={(e) => { e.stopPropagation(); onVerDetalle(producto) }}
                 title="Ver detalles"
               >
                 Ver
@@ -78,9 +88,11 @@ export default function ProductCard({
             {/* Carrito — botón cuadrado con ícono */}
             {onAgregarCarrito && (
               <button
+                type="button"
                 className="prod-card__btn prod-card__btn--cart"
-                onClick={() => !agregadoFeedback && onAgregarCarrito(producto)}
+                onClick={(e) => { e.stopPropagation(); !agregadoFeedback && !agotado && onAgregarCarrito(producto) }}
                 title={enCarrito ? 'Ya en carrito' : 'Agregar al carrito'}
+                disabled={agotado}
                 style={
                   agregadoFeedback
                     ? { background: 'var(--success)', color: 'var(--bg-base)', borderColor: 'var(--success)' }
@@ -101,8 +113,10 @@ export default function ProductCard({
 
             {/* Comprar — botón rectangular directo al checkout */}
             <button
+              type="button"
               className="prod-card__btn prod-card__btn--buy"
-              onClick={() => setShowCheckout(true)}
+              onClick={(e) => { e.stopPropagation(); !agotado && setShowCheckout(true) }}
+              disabled={agotado}
             >
               Comprar
             </button>
@@ -113,7 +127,7 @@ export default function ProductCard({
       {/* Modal de pago */}
       {showCheckout && (
         <CheckoutModal
-          items={[{ nombre, precio }]}
+          items={[{ id: producto.id, productoId: producto.id, nombre, precio, cantidad: 1 }]}
           total={precio}
           onClose={() => setShowCheckout(false)}
         />

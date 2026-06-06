@@ -1,53 +1,52 @@
 // src/components/CheckoutModal.jsx
-// Modal de pago simulado — reutilizable en Productos, Comparador y PcBuilder.
-// Recibe: items [{ nombre, precio }], total, onClose
-// No necesita login — la validación de sesión la hace el padre si quiere.
+// Modal de pago — llama POST /api/pedidos al confirmar.
+// Requiere usuario autenticado (token en AuthContext).
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth }     from '../context/AuthContext'
+import { useCart }     from '../context/CartContext'
+import { confirmarPedido } from '../services/carritoService'
 import '../styles/CheckoutModal.css'
 
 const METODOS = [
-  { id: 'tarjeta',   label: 'Tarjeta' },
-  { id: 'nequi',     label: 'Nequi' },
-  { id: 'pse',       label: 'PSE' },
-  { id: 'efectivo',  label: 'Efectivo' },
+  { id: 'tarjeta',  label: 'Tarjeta'  },
+  { id: 'nequi',    label: 'Nequi'    },
+  { id: 'pse',      label: 'PSE'      },
+  { id: 'efectivo', label: 'Efectivo' },
 ]
 
 function fmtCOP(n) {
-  return `$${Number(n).toLocaleString('es-CO')}`
+  return `$${Number(n || 0).toLocaleString('es-CO')}`
 }
 
-function generarOrden() {
+function generarOrdenLocal() {
   return `NX-${Date.now().toString(36).toUpperCase()}`
 }
 
-// Formatea número de tarjeta con espacios cada 4 dígitos
 function fmtCard(val) {
   return val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim()
 }
-// Formatea fecha MM/AA
+
 function fmtFecha(val) {
   const d = val.replace(/\D/g, '').slice(0, 4)
-  return d.length > 2 ? `${d.slice(0,2)}/${d.slice(2)}` : d
+  return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d
 }
 
 export default function CheckoutModal({ items = [], total = 0, onClose }) {
-  const navigate = useNavigate()
+  const navigate        = useNavigate()
+  const { token }       = useAuth()
+  const { vaciar }      = useCart()
 
-  // 'form' | 'loading' | 'success'
-  const [fase, setFase]       = useState('form')
-  const [metodo, setMetodo]   = useState('tarjeta')
+  // 'form' | 'loading' | 'success' | 'error'
+  const [fase,    setFase]    = useState('form')
+  const [metodo,  setMetodo]  = useState('tarjeta')
   const [ordenId, setOrdenId] = useState('')
+  const [errBack, setErrBack] = useState('')
 
   const [form, setForm] = useState({
-    nombre:   '',
-    numero:   '',
-    fecha:    '',
-    cvv:      '',
-    // Nequi / PSE
-    telefono: '',
-    banco:    '',
+    nombre: '', numero: '', fecha: '', cvv: '',
+    telefono: '', banco: '',
   })
   const [errores, setErrores] = useState({})
 
@@ -58,17 +57,17 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
 
   const validar = () => {
     const e = {}
-    if (!form.nombre.trim())          e.nombre   = true
+    if (!form.nombre.trim()) e.nombre = true
     if (metodo === 'tarjeta') {
-      if (form.numero.replace(/\s/g,'').length < 16) e.numero = true
-      if (form.fecha.length < 5)      e.fecha    = true
-      if (form.cvv.length < 3)        e.cvv      = true
+      if (form.numero.replace(/\s/g, '').length < 16) e.numero = true
+      if (form.fecha.length < 5) e.fecha = true
+      if (form.cvv.length < 3)   e.cvv   = true
     }
     if (metodo === 'nequi') {
-      if (form.telefono.replace(/\D/g,'').length < 10) e.telefono = true
+      if (form.telefono.replace(/\D/g, '').length < 10) e.telefono = true
     }
     if (metodo === 'pse') {
-      if (!form.banco.trim())          e.banco    = true
+      if (!form.banco.trim()) e.banco = true
     }
     setErrores(e)
     return Object.keys(e).length === 0
@@ -77,14 +76,24 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
   const handlePagar = async () => {
     if (!validar()) return
     setFase('loading')
-    // Simula latencia de procesamiento
-    await new Promise(r => setTimeout(r, 1600))
-    setOrdenId(generarOrden())
-    setFase('success')
+    setErrBack('')
+
+    try {
+      const resultado = await confirmarPedido(items, token, form.nombre)
+      setOrdenId(resultado.pedidoId ?? generarOrdenLocal())
+      vaciar()          // limpia el carrito tras confirmar
+      setFase('success')
+    } catch (e) {
+      setErrBack(e.message || 'Error al procesar el pago')
+      setFase('error')
+    }
   }
 
   return (
-    <div className="checkout-overlay" onClick={fase === 'form' ? onClose : undefined}>
+    <div
+      className="checkout-overlay"
+      onClick={fase === 'form' ? onClose : undefined}
+    >
       <div className="checkout-modal" onClick={e => e.stopPropagation()}>
 
         {/* ── FORMULARIO ── */}
@@ -92,7 +101,7 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
           <>
             <div className="checkout-modal__header">
               <div className="checkout-modal__titles">
-                <p className="checkout-modal__eyebrow">Pago seguro simulado</p>
+                <p className="checkout-modal__eyebrow">Pago seguro</p>
                 <h2 className="checkout-modal__title">Finalizar compra</h2>
               </div>
               <button className="checkout-modal__close" onClick={onClose}>✕</button>
@@ -105,7 +114,9 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
                 {items.map((item, i) => (
                   <div key={i} className="checkout-modal__item">
                     <span className="checkout-modal__item-name">{item.nombre}</span>
-                    <span className="checkout-modal__item-price">{fmtCOP(item.precio)}</span>
+                    <span className="checkout-modal__item-price">
+                      {fmtCOP(item.precio)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -118,7 +129,7 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
             {/* Form */}
             <div className="checkout-modal__form">
 
-              {/* Método de pago */}
+              {/* Método */}
               <div className="checkout-field">
                 <span className="checkout-field__label">Método de pago</span>
                 <div className="checkout-methods">
@@ -134,7 +145,7 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
                 </div>
               </div>
 
-              {/* Nombre siempre visible */}
+              {/* Nombre */}
               <div className="checkout-field">
                 <label className="checkout-field__label">
                   {metodo === 'tarjeta' ? 'Nombre en la tarjeta' : 'Nombre completo'}
@@ -162,7 +173,7 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
                       />
                       <span className="checkout-field__card-icon">
                         {form.numero.startsWith('4') ? 'VISA' :
-                         form.numero.startsWith('5') ? 'MC' :
+                         form.numero.startsWith('5') ? 'MC'   :
                          form.numero.startsWith('3') ? 'AMEX' : '💳'}
                       </span>
                     </div>
@@ -185,7 +196,7 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
                           className={`checkout-field__input ${errores.cvv ? 'error' : ''}`}
                           placeholder="•••"
                           value={form.cvv}
-                          onChange={e => set('cvv', e.target.value.replace(/\D/g,'').slice(0,4))}
+                          onChange={e => set('cvv', e.target.value.replace(/\D/g, '').slice(0, 4))}
                           maxLength={4}
                           type="password"
                         />
@@ -198,12 +209,12 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
               {/* Nequi */}
               {metodo === 'nequi' && (
                 <div className="checkout-field">
-                  <label className="checkout-field__label">Número Nequi (celular)</label>
+                  <label className="checkout-field__label">Número Nequi</label>
                   <input
                     className={`checkout-field__input ${errores.telefono ? 'error' : ''}`}
                     placeholder="300 000 0000"
                     value={form.telefono}
-                    onChange={e => set('telefono', e.target.value.replace(/\D/g,'').slice(0,10))}
+                    onChange={e => set('telefono', e.target.value.replace(/\D/g, '').slice(0, 10))}
                     maxLength={10}
                   />
                 </div>
@@ -222,14 +233,13 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
                 </div>
               )}
 
-              {/* Efectivo — sin campos extra */}
+              {/* Efectivo */}
               {metodo === 'efectivo' && (
                 <p style={{
                   fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-                  letterSpacing: '1.5px', color: 'var(--text-muted)',
-                  lineHeight: 1.6,
+                  letterSpacing: '1.5px', color: 'var(--text-muted)', lineHeight: 1.6,
                 }}>
-                  Con este método recibirás instrucciones de pago al correo registrado.
+                  Recibirás instrucciones de pago al correo registrado.
                 </p>
               )}
 
@@ -264,6 +274,23 @@ export default function CheckoutModal({ items = [], total = 0, onClose }) {
               onClick={() => { onClose(); navigate('/') }}
             >
               Volver al inicio
+            </button>
+          </div>
+        )}
+
+        {/* ── ERROR ── */}
+        {fase === 'error' && (
+          <div className="checkout-success">
+            <div className="checkout-success__icon" style={{ background: 'rgba(255,59,92,.1)', border: '1px solid rgba(255,59,92,.3)', color: 'var(--danger)' }}>✕</div>
+            <h2 className="checkout-success__title" style={{ color: 'var(--danger)' }}>
+              Error en el pago
+            </h2>
+            <p className="checkout-success__desc">{errBack}</p>
+            <button
+              className="checkout-success__btn"
+              onClick={() => setFase('form')}
+            >
+              Intentar de nuevo
             </button>
           </div>
         )}

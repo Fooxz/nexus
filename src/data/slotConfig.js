@@ -3,14 +3,14 @@
 // =============================================
 
 export const SLOT_CONFIG = [
-  { id: "cpu",         label: "Procesador",     icon: "⚡", required: true  },
-  { id: "motherboard", label: "Placa Madre",     icon: "🔧", required: true  },
-  { id: "ram",         label: "Memoria RAM",     icon: "💾", required: true  },
-  { id: "gpu",         label: "Tarjeta Gráfica", icon: "🎮", required: true  },
-  { id: "storage",     label: "Almacenamiento",  icon: "💿", required: true  },
-  { id: "psu",         label: "Fuente de Poder", icon: "🔌", required: true  },
   { id: "case",        label: "Gabinete",        icon: "🖥️", required: false },
-  { id: "cooling",     label: "Refrigeración",   icon: "❄️", required: true  },
+  { id: "motherboard", label: "Placa Madre",      icon: "🔧", required: true  },
+  { id: "cpu",         label: "Procesador",       icon: "⚡", required: true  },
+  { id: "gpu",         label: "Tarjeta Gráfica",  icon: "🎮", required: true  },
+  { id: "ram",         label: "Memoria RAM",       icon: "💾", required: true  },
+  { id: "storage",     label: "Almacenamiento",   icon: "💿", required: true  },
+  { id: "psu",         label: "Fuente de Poder",  icon: "🔌", required: true  },
+  { id: "cooling",     label: "Refrigeración",    icon: "❄️", required: true  },
 ]
 
 export const PRESETS = {
@@ -32,7 +32,7 @@ export const PRESETS = {
 }
 
 export const PRESETS_META = [
-  { key: 'basico', label: '💻 Básico', price: '~$700'   },
-  { key: 'gamer',  label: '🎮 Gamer',  price: '~$1,200' },
-  { key: 'pro',    label: '🚀 Pro',    price: '~$2,000' },
+  { key: 'basico', label: ' Básico', price:  '~$3.612.000' },
+  { key: 'gamer',  label: ' Gamer',  price: '~$5.708.500' },
+  { key: 'pro',    label: ' Pro',    price: '~$7.988.500' },
 ]

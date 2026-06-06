@@ -4,13 +4,14 @@
 // USE_MOCK = false → Spring Boot
 // =============================================
 import { CELULARES } from '../data/mockCelulares'  // ← corregido
+import API_BASE_URL from '../config/api'
 
 const USE_MOCK = false
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = API_BASE_URL
 
 export async function getCelulares() {
   if (USE_MOCK) return CELULARES
-  const res = await fetch(`${API_BASE}/productos?categoria=celular`)
+  const res = await fetch(`${API_BASE}/celulares`)
   if (!res.ok) throw new Error('Error cargando celulares')
   return res.json()
 }

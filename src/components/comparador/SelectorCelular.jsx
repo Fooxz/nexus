@@ -59,19 +59,19 @@ export default function SelectorCelular({
               onClick={() => onSelect(p)}
             >
               <img
-                src={p.imagen}
+                src={p.producto?.imagen ?? p.imagen}
                 alt={p.modelo}
                 className="sel-item-img"
                 onError={e => { e.target.style.display = 'none' }}
               />
               <div className="sel-item-info">
-                <p className="sel-item-marca">{p.marca}</p>
+                <p className="sel-item-marca">{p.producto?.marca ?? p.marca}</p>
                 <p className="sel-item-modelo">{p.modelo} · {p.storage}</p>
                 <p className="sel-item-color">{p.color}</p>
               </div>
               <p className="sel-item-precio">
-                ${p.precio.toLocaleString('es-CO')}
-              </p>
+  ${Number(p.producto?.precio ?? p.precio ?? 0).toLocaleString('es-CO')}
+</p>
             </button>
           ))}
         </div>

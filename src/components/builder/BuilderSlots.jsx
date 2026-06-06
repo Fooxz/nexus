@@ -26,7 +26,11 @@ export default function BuilderSlots({ build, onOpen, onRemove }) {
                 onClick={() => onOpen('ram', slotNumber)}
               >
                 <div className="slot-header">
-                  <div className="slot-icon">💾</div>
+                  <div className="slot-icon">
+                    {filled && part?.imagen
+                      ? <img src={part.imagen} alt={part.nombre} />
+                      : ''}
+                  </div>
                   <div className="slot-info">
                     <div className="slot-label">
                       RAM Slot {slotNumber}
@@ -66,7 +70,11 @@ export default function BuilderSlots({ build, onOpen, onRemove }) {
             onClick={() => onOpen(slot.id)}
           >
             <div className="slot-header">
-              <div className="slot-icon">{slot.icon}</div>
+              <div className="slot-icon">
+                {filled && part?.imagen
+                  ? <img src={part.imagen} alt={part.nombre} />
+                  : slot.icon}
+              </div>
               <div className="slot-info">
                 <div className="slot-label">
                   {slot.label} {slot.required && <span className="text-danger">*</span>}

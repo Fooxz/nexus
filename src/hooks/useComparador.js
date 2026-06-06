@@ -4,8 +4,8 @@
 // Coordina servicios + estado React.
 // No calcula nada — eso es trabajo del service.
 // =============================================
-import { useState, useMemo, useCallback } from 'react'
-import { CELULARES } from '../data/mockCelulares'  // ← corregido
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { getCelulares } from '../services/celularService'
 import {
   calcularScoresRadar,
   calcularVentajas,
@@ -18,19 +18,24 @@ export function useComparador() {
   const [modalSlot, setModalSlot]     = useState(null)
   const [busqueda, setBusqueda]       = useState('')
   const [filtroMarca, setFiltroMarca] = useState('Todas')
+  const [celulares, setCelulares]     = useState([])
 
-  const marcas = useMemo(() => {
-    const set = new Set(CELULARES.map(c => c.marca))
-    return ['Todas', ...Array.from(set).sort()]
+  useEffect(() => {
+    getCelulares().then(data => setCelulares(data)).catch(console.error)
   }, [])
 
+  const marcas = useMemo(() => {
+    const set = new Set(celulares.map(c => c.producto?.marca ?? c.marca))
+    return ['Todas', ...Array.from(set).sort()]
+  }, [celulares])
+
   const productosFiltrados = useMemo(() => {
-    return CELULARES.filter(c => {
-      const matchMarca    = filtroMarca === 'Todas' || c.marca === filtroMarca
-      const q             = busqueda.toLowerCase()
+    return celulares.filter(c => {
+      const matchMarca = filtroMarca === 'Todas' || (c.producto?.marca ?? c.marca) === filtroMarca
+      const q         = busqueda.toLowerCase()
       const matchBusqueda = !q ||
-        c.modelo.toLowerCase().includes(q) ||
-        c.marca.toLowerCase().includes(q)
+        (c.modelo ?? '').toLowerCase().includes(q) ||
+        (c.producto?.marca ?? c.marca ?? '').toLowerCase().includes(q)
       const otroSlot  = modalSlot === 'a' ? selB : selA
       const noEsMismo = !otroSlot || otroSlot.id !== c.id
       return matchMarca && matchBusqueda && noEsMismo
@@ -42,8 +47,8 @@ export function useComparador() {
     return {
       scores:       calcularScoresRadar(selA, selB),
       ventajas:     calcularVentajas(selA, selB),
-      scoreGlobalA: calcularScoreGlobal(selA, selB),
-      scoreGlobalB: calcularScoreGlobal(selB, selA),
+      scoreGlobalA: calcularScoreGlobal(selA),
+      scoreGlobalB: calcularScoreGlobal(selB),
     }
   }, [selA, selB])
 
@@ -53,9 +58,33 @@ export function useComparador() {
 
   const cerrarModal = useCallback(() => setModalSlot(null), [])
 
-  const seleccionar = useCallback((producto) => {
-    if (modalSlot === 'a') setSelA(producto)
-    if (modalSlot === 'b') setSelB(producto)
+  const seleccionar = useCallback((c) => {
+    const prod = c.producto ?? c
+    const normalizado = {
+      id:              c.id,
+      modelo:          c.modelo,
+      storage:         c.storage,
+      color:           c.color,
+      marca:           prod.marca,
+      precio:          prod.precio,
+      imagen:          prod.imagen,
+      precioNormal:    c.precioNormal,
+      descuento:       c.descuento ?? 0,
+      pantalla:        c.pantalla,
+      resolucion:      c.resolucion,
+      so:              c.so,
+      procesador:      c.procesador,
+      ram:             c.ram,
+      almacenamiento:  c.almacenamiento,
+      camaraPrincipal: c.camaraPrincipal,
+      camaraFrontal:   c.camaraFrontal,
+      bateria:         c.bateria,
+      tieneNfc:        c.tieneNfc,
+      tiene5g:         c.tiene5g,
+    }
+
+    if (modalSlot === 'a') setSelA(normalizado)
+    if (modalSlot === 'b') setSelB(normalizado)
     cerrarModal()
   }, [modalSlot, cerrarModal])
 

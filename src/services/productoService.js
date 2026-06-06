@@ -5,9 +5,10 @@
 // =============================================
 import { PC_PARTS }                          from '../data/mockComponentesPc'  // ← corregido
 import { flattenPcParts, createProductsMap } from '../adapters/productsMap'
+import API_BASE_URL from '../config/api'
 
-const USE_MOCK = true
-const API_BASE = 'http://localhost:8080/api'
+const USE_MOCK = false
+const API_BASE = API_BASE_URL
 
 const ALL_PRODUCTS = flattenPcParts(PC_PARTS)
 const PRODUCTS_MAP = createProductsMap(ALL_PRODUCTS)

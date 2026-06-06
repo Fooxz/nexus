@@ -178,7 +178,7 @@ export const PC_PARTS = {
       id: "psu-2", nombre: "EVGA 650W Gold", precio: 369000,
       potencia: 650, certificacion: "80+ Gold", modular: false,
       imagen: "https://m.media-amazon.com/images/I/71I5Q3HqJ5L.jpg",
-      modelGlb: "psu4", modelScale: 1.12, modelOffset: [0, 0, 0], modelRotation: [0,0,0], modelColor: "#222222", modelMesh: "casing",
+      modelGlb: "psu4", modelScale: 0.45, modelOffset: [0, 0, 0], modelRotation: [0,0,0], modelColor: "#222222", modelMesh: "casing",
     },
     {
       id: "psu-3", nombre: "Seasonic Focus GX-750W Gold", precio: 492000,

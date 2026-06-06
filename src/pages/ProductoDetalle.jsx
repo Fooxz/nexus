@@ -9,6 +9,7 @@ import Navbar        from '../components/Navbar'
 import Footer        from '../components/Footer'
 import ProductCard   from '../components/ProductCard'
 import CheckoutModal from '../components/CheckoutModal'
+import CommentsSection from '../components/CommentsSection'
 import { useCart }   from '../context/CartContext'
 import { CELULARES } from '../data/mockCelulares'
 import '../styles/productos/productDetail.css'
@@ -53,6 +54,7 @@ export default function ProductoDetalle() {
           categoria: LABELS[cat] ?? cat,
           specs: {},
           descuento: 0,
+          stock: p.stock ?? 1,
         }))
       )
       const celFlat = CELULARES.map(c => ({
@@ -60,6 +62,7 @@ export default function ProductoDetalle() {
         marca: c.marca, precio: c.precio,
         precioNormal: c.precioNormal, descuento: c.descuento ?? 0,
         imagen: c.imagen, categoria: 'Celular', specs: c.specs ?? {},
+        stock: c.stock ?? 1,
       }))
 
       const todos = [...pcFlat, ...celFlat]
@@ -72,7 +75,13 @@ export default function ProductoDetalle() {
     cargar()
   }, [producto?.id])
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [producto?.id])
+
   if (!producto) return null
+
+  const agotado = (producto.stock ?? 0) === 0
 
   const {
     nombre, marca, precio, precioNormal,
@@ -114,9 +123,10 @@ export default function ProductoDetalle() {
             </div>
 
             <div className="detail-info">
-              <div className="detail-info__eyebrow">
+              <div className="detail-info__eyebrow" style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
                 {marca && <span>{marca}</span>}
                 {categoria && <span className="badge badge-muted">{categoria}</span>}
+                {agotado && <span className="badge badge-danger">Agotado</span>}
               </div>
 
               <h1 className="detail-info__title">{nombre}</h1>
@@ -145,12 +155,19 @@ export default function ProductoDetalle() {
 
               {/* Acciones */}
               <div className="detail-actions">
-                <button className="detail-btn-buy" onClick={() => setShowCheckout(true)}>
+                <button
+                  type="button"
+                  className="detail-btn-buy"
+                  onClick={() => !agotado && setShowCheckout(true)}
+                  disabled={agotado}
+                >
                   Comprar ahora
                 </button>
                 <button
+                  type="button"
                   className={`detail-btn-cart ${enCarrito ? 'in-cart' : ''}`}
                   onClick={handleAgregarCarrito}
+                  disabled={agotado}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth="2">
@@ -179,6 +196,12 @@ export default function ProductoDetalle() {
           )}
 
           {/* Más productos */}
+          {/* Comentarios */}
+          <section className="detail-comments">
+            <CommentsSection productId={producto.id} />
+          </section>
+
+          {/* Más productos */}
           {masProductos.length > 0 && (
             <section className="detail-more">
               <h2 className="detail-section-title">También te puede interesar</h2>
@@ -204,7 +227,7 @@ export default function ProductoDetalle() {
 
       {showCheckout && (
         <CheckoutModal
-          items={[{ nombre, precio }]}
+          items={[{ id: producto.id, productoId: producto.id, nombre, precio, cantidad: 1 }]}
           total={precio}
           onClose={() => setShowCheckout(false)}
         />

@@ -6,6 +6,7 @@ import '../styles/builder/builder-summary.css'
 import '../styles/builder/builder-toasts.css'
 import '../styles/builder/builder-visualizer.css'
 
+import { useState } from 'react'
 import Navbar         from '../components/Navbar'
 import BuilderSlots   from '../components/builder/BuilderSlots'
 import BuilderSidebar from '../components/builder/BuilderSidebar'
@@ -18,7 +19,28 @@ import { PRESETS_META } from '../data/slotConfig'
 export default function PcBuilder() {
   const builder          = useBuilder()
   const { agregar }      = useCart()
+  const [presetActivo, setPresetActivo] = useState(null)
   const { hydratedBuild, build } = builder
+
+  const handleLoadPreset = (key) => {
+    builder.loadPreset(key)
+    setPresetActivo(key)
+  }
+
+  const handleSelectPart = (part) => {
+    setPresetActivo(null)
+    builder.selectPart(part)
+  }
+
+  const handleRemovePart = (slotId, slotNumber) => {
+    setPresetActivo(null)
+    builder.removePart(slotId, slotNumber)
+  }
+
+  const handleClearBuild = () => {
+    setPresetActivo(null)
+    builder.clearBuild()
+  }
 
   const handleAddToCart = () => {
     if (!builder.canAddToCart) return
@@ -43,20 +65,23 @@ export default function PcBuilder() {
     <>
       <Navbar />
 
-      <div
-        className="page-header"
-        style={{
-          padding: '1.5rem 2rem',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '2rem', marginTop: '60px',
-        }}
-      >
-        <div>
-          <h1>PC <span>Builder</span></h1>
-          <p>Arma tu PC ideal. Verificamos compatibilidad en tiempo real.</p>
-        </div>
-      </div>
+      <div className="builder-header">
+  <span className="builder-header-word" aria-hidden="true">
+    NEXUS.
+  </span>
+
+  <div className="builder-header-content">
+    <h1>
+      PC <span>Builder</span>
+    </h1>
+    <p>
+      Arma tu PC ideal. Verificamos compatibilidad en tiempo real.
+    </p>
+  </div>
+</div>
+
+
+
 
       <div className="builder-layout">
         <div className="builder-main">
@@ -75,14 +100,18 @@ export default function PcBuilder() {
             </div>
             <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
               {PRESETS_META.map(p => (
-                <button key={p.key} className="preset-btn" onClick={() => builder.loadPreset(p.key)}>
+                <button
+                  key={p.key}
+                  className={`preset-btn${presetActivo === p.key ? ' preset-btn--active' : ''}`}
+                  onClick={() => handleLoadPreset(p.key)}
+                >
                   <span className="preset-name">{p.label}</span>
                   <span className="preset-price">{p.price}</span>
                 </button>
               ))}
               <button
                 className="btn btn-outline btn-sm"
-                onClick={builder.clearBuild}
+                onClick={handleClearBuild}
                 style={{ marginLeft: 'auto' }}
               >
                 Limpiar build
@@ -93,7 +122,7 @@ export default function PcBuilder() {
           <BuilderSlots
             build={hydratedBuild?.components || {}}
             onOpen={builder.openModal}
-            onRemove={builder.removePart}
+            onRemove={handleRemovePart}
           />
         </div>
 
@@ -117,7 +146,7 @@ export default function PcBuilder() {
         parts={builder.filteredParts}
         query={builder.searchQuery}
         onSearch={builder.setSearchQuery}
-        onSelect={builder.selectPart}
+        onSelect={handleSelectPart}
         onClose={builder.closeModal}
       />
     </>
