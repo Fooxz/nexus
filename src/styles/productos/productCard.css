@@ -71,7 +71,7 @@
 .prod-card__footer {
   padding: 1rem 1.25rem; border-top: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
-  gap: .75rem; position: relative; z-index: 1;
+  gap: .75rem; position: relative; z-index: 1; flex-wrap: wrap; 
 }
 .prod-card__prices { display: flex; flex-direction: column; gap: 1px; }
 .prod-card__price-old {

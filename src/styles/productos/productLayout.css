@@ -108,7 +108,7 @@
 .productos-body { padding-block: 2.5rem 4rem; }
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1px; background: var(--border); border: 1px solid var(--border);
 }
 
@@ -128,5 +128,5 @@
   .productos-toolbar { flex-direction: column; align-items: stretch; }
   .search-box { max-width: 100%; }
   .toolbar-right { margin-left: 0; justify-content: space-between; }
-  .productos-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .productos-grid { grid-template-columns: 1fr; }
 }
