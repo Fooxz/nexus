@@ -1,22 +1,28 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from 'react'
+// =============================================
+// NEXUS — AuthContext
+// Responsabilidad única: estado global de sesión.
+// =============================================
+import { createContext, useContext, useState } from 'react'
 import { getUser, getToken, logout as logoutService } from '../services/authService'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser]   = useState(() => getUser())
+  const [user,  setUser]  = useState(() => getUser())
   const [token, setToken] = useState(() => getToken())
 
+  // authResponse puede ser { token, user } (nuevo authService)
+  // o { token, nombre, email, rol } (formato legado)
   const login = (authResponse) => {
-    localStorage.setItem('nexus_token', authResponse.token)
-    localStorage.setItem('nexus_user', JSON.stringify({
+    const userData = authResponse.user ?? {
       nombre: authResponse.nombre,
       email:  authResponse.email,
       rol:    authResponse.rol,
-    }))
+    }
+    localStorage.setItem('nexus_token', authResponse.token)
+    localStorage.setItem('nexus_user',  JSON.stringify(userData))
     setToken(authResponse.token)
-    setUser({ nombre: authResponse.nombre, email: authResponse.email, rol: authResponse.rol })
+    setUser(userData)
   }
 
   const logout = () => {

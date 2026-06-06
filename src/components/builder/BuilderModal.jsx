@@ -25,7 +25,7 @@ export default function BuilderModal({ open, activeSlot, parts, query, onSearch,
               <div className="part-option-icon">
                 {part.imagen
                   ? <img src={part.imagen} alt={part.nombre} style={{width:'100%',height:'100%',objectFit:'contain'}} onError={e => e.target.style.display='none'}/>
-                  : '📦'}
+                  : ''}
               </div>
               <div className="part-option-info">
                 <div className="part-option-name">{part.nombre}</div>
@@ -39,7 +39,7 @@ export default function BuilderModal({ open, activeSlot, parts, query, onSearch,
                   {part.certificacion && ` · ${part.certificacion}`}
                 </div>
               </div>
-              <div className="part-option-price">${part.precio}</div>
+              <div className="part-option-price">${part.precio.toLocaleString('es-CO')}</div>
             </div>
           ))}
           {parts.length === 0 && (

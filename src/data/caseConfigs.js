@@ -1,9 +1,19 @@
 // =============================================
 // NEXUS — CASE CONFIGS
-// Single source of truth para posiciones,
-// escalas y rotaciones de cada gabinete.
+// Responsabilidad única: el chasis decide dónde
+// van las piezas que él mismo aloja, y cómo
+// están orientadas las piezas que NO dependen
+// de la board (psu, storage).
 //
-
+// El chasis controla:
+//   - position de: motherboard, psu, storage
+//   - scale y rotation de: psu, storage
+//   - scale del chasis en sí
+//
+// La board controla (boardGeometry.js):
+//   - scale y rotation de: motherboard, cpu, gpu, ram, cooling
+//   - position de: cpu, gpu, ram, cooling
+// =============================================
 
 export const CASE_CONFIGS = {
 
@@ -11,44 +21,70 @@ export const CASE_CONFIGS = {
     label:  'Mid Tower',
     modelo: '/modelos/cases/case.glb',
     scale:  1,
+    
     positions: {
       motherboard: [0,     1.8,   0.2  ],
-      cpu:         [0.1,   2.16,  0.25 ],
-      gpu:         [0.52,  1.27, -0.6  ],
-      ram:         [0.74,  2.1,   0.37 ],
       psu:         [-1.19,-0.78, -0.27 ],
-      storage:     [-0.59,-0.26, -0.57 ],
-      cooling:     [0.1,   2.4,   0.25 ],
+      storageSata: [-0.59,-0.26, -0.57 ],
     },
     scales: {
-      motherboard: 0.5,
-      cpu:         10.50,
-      gpu:         0.55,
-      ram:         0.35,
-      psu:         0.42,
-      storage:     10.37,
-      cooling:     0.01,
+      psu:        0.42,
+      storageSata: 10.37,
     },
     rotations: {
-      motherboard: [Math.PI / 2, 0,     0    ],
-      cpu:         [1.5,         0,     0    ],
-      gpu:         [-1.59,      -3.14,  0.02 ],
-      ram:         [1.57,        0,    -0.04 ],
-      psu:         [-0.01,      -1.58,  0    ],
-      storage:     [0,           0.01,  0.01 ],
-      cooling:     [0,           0,     0    ],
+      psu:         [-0.01, -1.58,  0    ],
+      storageSata: [0,      0.01,  0.01 ],
     },
-
-    // Slots de RAM — posiciones para cada módulo
-    // Se completan cuando se implemente la selección múltiple
-    ramSlots: [
-      [0.74, 2.1,  0.37],  // slot 1
-      [0.84, 2.1,  0.37],  // slot 2 — ajustar con Needle
-      
-    ],
   },
 
-  // Próximos gabinetes — agregar cuando tengas el .glb y lo ajustes con Needle
+  'case-gamer': {
+    label:  'Case Gamer',
+    modelo: '/modelos/cases/caseGamer.glb',
+    scale:  10.5, 
+    position: [0, 1.5, 0.27],
+    rotation: [0, 0, 0],                             // ajustar en escena
+    positions: {
+      motherboard: [0,     1.8,   0.2  ],
+      psu:         [-1.19,  0.1, 0.009 ],
+      storageSata: [0.59,-0.26, -0.1 ],
+    },
+    scales: {
+      psu:         0.42,
+      storageSata: 10.37,
+    },
+    rotations: {
+      psu:         [-0.01, -1.58,  0    ],
+      storageSata: [0,      0.01,  0.01 ],
+    },
+    fan: {
+      position: [0.5, -0.3, -0.5],
+      scale:    9,
+      rotation: [0, 0, 0],
+    },
+  },
+
+  'case-pro': {
+    label:  'Case Pro',
+    modelo: '/modelos/cases/casePro.glb',
+    scale:  0.68,
+    position: [2.2, -1, 4.4],
+    rotation: [0, Math.PI/2, 0],
+    positions: {
+      motherboard: [0,     1.8,   0.2  ],
+      psu:         [-1.19,0, -0.01 ],
+      storageSata: [-0.59,0.4, 0.5 ],
+    },
+    scales: {
+      psu:         0.42,
+      storageSata: 10.37,
+    },
+    rotations: {
+      psu:         [-0.01, -1.58,  0    ],
+      storageSata: [0,      0.01,  0.01 ],
+    },
+  },
+
+  // Próximos gabinetes — agregar cuando tengas el .glb
   // 'nzxt-h510':       { ... }
   // 'lian-li-o11':     { ... }
   // 'fractal-meshify': { ... }

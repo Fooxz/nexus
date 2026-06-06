@@ -1,154 +1,158 @@
 // =============================================
-// NEXUS — RadarChart
-// Responsabilidad única: renderizar el radar SVG.
-// Recibe scores ya calculados — no hace cálculos.
-// SVG puro, sin Chart.js, sin Recharts.
+// NEXUS — RadarChart (refactorizado)
+// Consume scores del comparadorService vía props.
+// SVG puro, sin dependencias externas.
 // =============================================
 
 const EJES = [
-  { key: 'rendimiento', label: 'Rendimiento' },
-  { key: 'pantalla',    label: 'Pantalla'    },
-  { key: 'camaras',     label: 'Cámaras'     },
-  { key: 'bateria',     label: 'Batería'     },
-  { key: 'memoria',     label: 'Memoria'     },
-  { key: 'valor',       label: 'Valor'       },
+  { label: 'Rendimiento', key: 'rendimiento' },
+  { label: 'Pantalla',    key: 'pantalla'    },
+  { label: 'Cámara',      key: 'camaras'     },
+  { label: 'Batería',     key: 'bateria'     },
+  { label: 'Memoria',     key: 'memoria'     },
+  { label: 'Valor',       key: 'valor'       },
 ]
 
-const CX = 160
-const CY = 160
-const R  = 110  // radio máximo
+const CX = 210, CY = 210, R = 155
 
-function polar(angulo, radio) {
-  const rad = (angulo - 90) * (Math.PI / 180)
-  return {
-    x: CX + radio * Math.cos(rad),
-    y: CY + radio * Math.sin(rad),
-  }
+function polar(angleDeg, r) {
+  const rad = (angleDeg - 90) * Math.PI / 180
+  return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) }
 }
 
-function puntos(scores, key) {
-  return EJES.map((eje, i) => {
-    const angulo = (360 / EJES.length) * i
-    const pct    = scores[eje.key]?.[key] ?? 50
-    const radio  = (pct / 100) * R
-    const p      = polar(angulo, radio)
-    return `${p.x},${p.y}`
+function poligonoPoints(scores, keys) {
+  return keys.map((key, i) => {
+    const s = scores[key] ?? 0
+    const { x, y } = polar((360 / keys.length) * i, (s / 100) * R)
+    return `${x},${y}`
   }).join(' ')
 }
 
-function puntosCirculo(radio) {
-  return EJES.map((_, i) => {
-    const angulo = (360 / EJES.length) * i
-    const p      = polar(angulo, radio)
-    return `${p.x},${p.y}`
-  }).join(' ')
-}
+export default function RadarChart({
+  scores,           // objeto { rendimiento:{a,b}, pantalla:{a,b}, ... }
+  colorA, colorB,
+  nombreA, nombreB,
+}) {
+  // Fallback si no hay scores aún
+  if (!scores) return null
 
-export default function RadarChart({ scores, colorA, colorB, nombreA, nombreB }) {
-  const niveles = [0.25, 0.5, 0.75, 1]
+  const keys    = EJES.map(e => e.key)
+  const niveles = [0.2, 0.4, 0.6, 0.8, 1]
+
+  const scoresA = keys.map(k => scores[k]?.a ?? 0)
+  const scoresB = keys.map(k => scores[k]?.b ?? 0)
+
+  // DEBUG TEMPORAL
+  console.log('RadarChart scores:', scores)
+  console.log('scoresA:', scoresA)
+  console.log('scoresB:', scoresB)
+
+  const pointsA = poligonoPoints(
+    Object.fromEntries(keys.map((k, i) => [k, scoresA[i]])), keys
+  )
+  const pointsB = poligonoPoints(
+    Object.fromEntries(keys.map((k, i) => [k, scoresB[i]])), keys
+  )
 
   return (
-    <div className="radar-wrap">
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', gap: '1.25rem',
+    }}>
       <svg
-        viewBox="0 0 320 320"
+        viewBox="0 0 420 420"
         width="100%"
-        className="radar-svg"
-        aria-label={`Radar comparativo entre ${nombreA} y ${nombreB}`}
+        style={{ maxWidth: 520 }}
       >
-        {/* Niveles de fondo */}
-        {niveles.map((n) => (
+        {/* ── Anillos de nivel ── */}
+        {niveles.map(n => (
           <polygon
             key={n}
-            points={puntosCirculo(R * n)}
+            points={EJES.map((_, i) => {
+              const { x, y } = polar((360 / EJES.length) * i, R * n)
+              return `${x},${y}`
+            }).join(' ')}
             fill="none"
             stroke="var(--border)"
-            strokeWidth="0.5"
-            opacity="0.6"
+            strokeWidth="0.75"
+            opacity="0.5"
           />
         ))}
 
-        {/* Ejes */}
-        {EJES.map((eje, i) => {
-          const angulo = (360 / EJES.length) * i
-          const outer  = polar(angulo, R)
+        {/* ── Ejes ── */}
+        {EJES.map((_, i) => {
+          const { x, y } = polar((360 / EJES.length) * i, R)
           return (
-            <line
-              key={eje.key}
-              x1={CX} y1={CY}
-              x2={outer.x} y2={outer.y}
-              stroke="var(--border)"
-              strokeWidth="0.5"
-              opacity="0.5"
+            <line key={i}
+              x1={CX} y1={CY} x2={x} y2={y}
+              stroke="var(--border)" strokeWidth="0.75" opacity="0.4"
             />
           )
         })}
 
-        {/* Área B (detrás) */}
+        {/* ── Área B (fondo) ── */}
         <polygon
-          className="radar-area radar-area-b"
-          points={puntos(scores, 'b')}
+          points={pointsB}
           fill={colorB}
-          fillOpacity="0.18"
+          fillOpacity="0.12"
           stroke={colorB}
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinejoin="round"
+          style={{ filter: `drop-shadow(0 0 8px ${colorB}80)` }}
         />
 
-        {/* Área A (delante) */}
+        {/* ── Área A (frente) ── */}
         <polygon
-          className="radar-area radar-area-a"
-          points={puntos(scores, 'a')}
+          points={pointsA}
           fill={colorA}
-          fillOpacity="0.18"
+          fillOpacity="0.12"
           stroke={colorA}
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinejoin="round"
+          style={{ filter: `drop-shadow(0 0 8px ${colorA}80)` }}
         />
 
-        {/* Puntos A */}
-        {EJES.map((eje, i) => {
-          const angulo = (360 / EJES.length) * i
-          const pct    = scores[eje.key]?.a ?? 50
-          const radio  = (pct / 100) * R
-          const p      = polar(angulo, radio)
+        {/* ── Puntos A ── */}
+        {scoresA.map((s, i) => {
+          const { x, y } = polar((360 / EJES.length) * i, (s / 100) * R)
           return (
-            <circle
-              key={`dot-a-${eje.key}`}
-              cx={p.x} cy={p.y} r="4"
+            <circle key={`a-${i}`}
+              cx={x} cy={y} r="4.5"
               fill={colorA}
-              className="radar-dot"
+              style={{ filter: `drop-shadow(0 0 4px ${colorA})` }}
             />
           )
         })}
 
-        {/* Puntos B */}
-        {EJES.map((eje, i) => {
-          const angulo = (360 / EJES.length) * i
-          const pct    = scores[eje.key]?.b ?? 50
-          const radio  = (pct / 100) * R
-          const p      = polar(angulo, radio)
+        {/* ── Puntos B ── */}
+        {scoresB.map((s, i) => {
+          const { x, y } = polar((360 / EJES.length) * i, (s / 100) * R)
           return (
-            <circle
-              key={`dot-b-${eje.key}`}
-              cx={p.x} cy={p.y} r="4"
+            <circle key={`b-${i}`}
+              cx={x} cy={y} r="4.5"
               fill={colorB}
-              className="radar-dot"
+              style={{ filter: `drop-shadow(0 0 4px ${colorB})` }}
             />
           )
         })}
 
-        {/* Labels de ejes */}
+        {/* ── Labels ── */}
         {EJES.map((eje, i) => {
-          const angulo = (360 / EJES.length) * i
-          const p      = polar(angulo, R + 22)
-          const anchor = p.x < CX - 5 ? 'end' : p.x > CX + 5 ? 'start' : 'middle'
+          const { x, y } = polar((360 / EJES.length) * i, R + 30)
+          const anchor = x < CX - 5 ? 'end' : x > CX + 5 ? 'start' : 'middle'
           return (
-            <text
-              key={`label-${eje.key}`}
-              x={p.x} y={p.y}
+            <text key={eje.label}
+              x={x} y={y}
               textAnchor={anchor}
               dominantBaseline="central"
-              className="radar-label"
+              style={{
+                fontFamily:    'var(--font-mono)',
+                fontSize:      '12px',
+                fontWeight:    600,
+                fill:          'var(--text-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+              }}
             >
               {eje.label}
             </text>
@@ -156,16 +160,25 @@ export default function RadarChart({ scores, colorA, colorB, nombreA, nombreB })
         })}
       </svg>
 
-      {/* Leyenda */}
-      <div className="radar-legend">
-        <span className="radar-legend-item">
-          <span className="radar-legend-dot" style={{ background: colorA }} />
-          {nombreA}
-        </span>
-        <span className="radar-legend-item">
-          <span className="radar-legend-dot" style={{ background: colorB }} />
-          {nombreB}
-        </span>
+      {/* ── Leyenda ── */}
+      <div style={{ display: 'flex', gap: '1.5rem' }}>
+        {[
+          { nombre: nombreA, color: colorA },
+          { nombre: nombreB, color: colorB },
+        ].map(l => (
+          <span key={l.nombre} style={{
+            display: 'flex', alignItems: 'center', gap: '.4rem',
+            fontFamily: 'var(--font-mono)', fontSize: '.7rem',
+            color: 'var(--text-secondary)',
+          }}>
+            <span style={{
+              width: 10, height: 10, borderRadius: '50%',
+              background: l.color, display: 'inline-block',
+              boxShadow: `0 0 6px ${l.color}`,
+            }} />
+            {l.nombre}
+          </span>
+        ))}
       </div>
     </div>
   )

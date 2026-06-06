@@ -2,14 +2,8 @@
 // NEXUS — COMPATIBILITY
 // Responsabilidad única: lógica de compatibilidad
 // entre componentes del PC Builder.
-// No sabe de UI, no sabe de datos, no sabe de slots.
-// Cuando el backend exista, esta lógica puede
-// moverse a Spring Boot y este archivo consume
-// el resultado del endpoint:
-//   POST /api/builder/check-compatibility
 // =============================================
 
-// Cada regla es independiente — fácil de agregar más
 const RULES = [
   {
     id: 'cpu-socket',
@@ -21,10 +15,26 @@ const RULES = [
   },
   {
     id: 'ram-type',
-    check: ({ motherboard, ram }) =>
-      motherboard && ram && ram.tipo !== motherboard.formatoRam,
-    message: ({ motherboard, ram }) =>
-      `RAM incompatible: ${ram.tipo} no es compatible con ${motherboard.formatoRam}`,
+    // ram viene de ramSlots[0].product — no directamente como "ram"
+    check: ({ motherboard, ramSlots }) => {
+      const ram = ramSlots?.[0]?.product
+      return motherboard && ram && ram.tipo !== motherboard.formatoRam
+    },
+    message: ({ motherboard, ramSlots }) => {
+      const ram = ramSlots?.[0]?.product
+      return `RAM incompatible: ${ram?.tipo} no es compatible con ${motherboard.formatoRam}`
+    },
+    tipo: 'error',
+  },
+  {
+    id: 'ram-slots',
+    // Avisa si el usuario intenta poner más RAM de lo que acepta la board
+    check: ({ motherboard, ramSlots }) => {
+      const maxSlots = motherboard?.slotsRam ?? 4
+      return ramSlots && ramSlots.length > maxSlots
+    },
+    message: ({ motherboard, ramSlots }) =>
+      `Demasiados módulos RAM: la placa acepta máximo ${motherboard.slotsRam} slots`,
     tipo: 'error',
   },
   {
@@ -37,6 +47,14 @@ const RULES = [
       const needed = (gpu?.potencia || 0) + (cpu?.tdp || 0) + 100
       return `Fuente insuficiente: necesitas ~${needed}W, tienes ${psu.potencia}W`
     },
+    tipo: 'warning',
+  },
+  {
+    id: 'cooling-tdp',
+    check: ({ cpu, cooling }) =>
+      cpu && cooling && cpu.tdp > cooling.tdpSoporte,
+    message: ({ cpu, cooling }) =>
+      `Refrigeración insuficiente: CPU necesita ${cpu.tdp}W TDP, el cooler soporta ${cooling.tdpSoporte}W`,
     tipo: 'warning',
   },
 ]

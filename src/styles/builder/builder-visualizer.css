@@ -11,8 +11,9 @@
 /* ── CASE BASE ── */
 .sidebar-case {
   position: relative;
-  width: 100%;
-  aspect-ratio: 4/3;
+  width: 80%;
+  height: 490px;
+  
   background: var(--bg-base);
   border: 1px solid var(--border-active);
   border-radius: var(--radius-lg);
