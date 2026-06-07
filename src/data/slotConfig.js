@@ -3,14 +3,14 @@
 // =============================================
 
 export const SLOT_CONFIG = [
-  { id: "case",        label: "Gabinete",        icon: "🖥️", required: false },
-  { id: "motherboard", label: "Placa Madre",      icon: "🔧", required: true  },
-  { id: "cpu",         label: "Procesador",       icon: "⚡", required: true  },
-  { id: "gpu",         label: "Tarjeta Gráfica",  icon: "🎮", required: true  },
-  { id: "ram",         label: "Memoria RAM",       icon: "💾", required: true  },
-  { id: "storage",     label: "Almacenamiento",   icon: "💿", required: true  },
-  { id: "psu",         label: "Fuente de Poder",  icon: "🔌", required: true  },
-  { id: "cooling",     label: "Refrigeración",    icon: "❄️", required: true  },
+  { id: "case",        label: "Gabinete",        icon: "  ", required: false },
+  { id: "motherboard", label: "Placa Madre",      icon: "  ", required: true  },
+  { id: "cpu",         label: "Procesador",       icon: "  ", required: true  },
+  { id: "gpu",         label: "Tarjeta Gráfica",  icon: "  ", required: true  },
+  { id: "ram",         label: "Memoria RAM",       icon: "  ", required: true  },
+  { id: "storage",     label: "Almacenamiento",   icon: "  ", required: true  },
+  { id: "psu",         label: "Fuente de Poder",  icon: "  ", required: true  },
+  { id: "cooling",     label: "Refrigeración",    icon: "  ", required: true  },
 ]
 
 export const PRESETS = {
